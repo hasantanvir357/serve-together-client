@@ -62,7 +62,6 @@ export default function RegisterPage() {
     imageUrl: "",
   });
   const [errors, setErrors] = React.useState<RegisterErrors>({});
-  const [isSubmitting, setIsSubmitting] = React.useState(false);
 
   const handleChange = (field: RegisterField) => (value: string) => {
     setValues((prev) => ({ ...prev, [field]: value }));
@@ -79,7 +78,6 @@ export default function RegisterPage() {
     }
 
     const name = values.name.trim();
-    setIsSubmitting(true);
     // No backend yet: persist the signup locally so the navbar picks it up.
     login({
       name,
@@ -186,8 +184,8 @@ export default function RegisterPage() {
             ) : null}
           </div>
 
-          <Button type="submit" className="mt-2 w-full" disabled={isSubmitting}>
-            {isSubmitting ? "Creating account…" : "Create Account"}
+          <Button type="submit" className="mt-2 w-full">
+            Create Account
           </Button>
         </form>
       </CardContent>

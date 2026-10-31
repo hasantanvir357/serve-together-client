@@ -1,7 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, CalendarDays, MapPin, Users } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import {
   Card,
   CardContent,
@@ -155,10 +156,13 @@ export default function UpcomingEvents() {
 
       {/* CTA */}
       <div className="mt-8 flex justify-center">
-        <Button size="lg" className="h-11 px-6" render={<Link href="/upcoming-events" />}>
+        <Link
+          href="/upcoming-events"
+          className={cn(buttonVariants({ size: "lg" }), "h-11 px-6")}
+        >
           View All Upcoming Events
           <ArrowRight aria-hidden="true" />
-        </Button>
+        </Link>
       </div>
     </section>
   );

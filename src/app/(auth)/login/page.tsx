@@ -39,7 +39,6 @@ export default function LoginPage() {
   const [errors, setErrors] = React.useState<
     Partial<Record<LoginField, string>>
   >({});
-  const [isSubmitting, setIsSubmitting] = React.useState(false);
 
   const handleChange = (field: LoginField) => (value: string) => {
     setValues((prev) => ({ ...prev, [field]: value }));
@@ -63,7 +62,6 @@ export default function LoginPage() {
     }
 
     const name = nameFromEmail(values.email);
-    setIsSubmitting(true);
     login({ name, email: values.email });
     toast.add({
       title: "Signed in",
@@ -125,8 +123,8 @@ export default function LoginPage() {
             ) : null}
           </div>
 
-          <Button type="submit" className="mt-2 w-full" disabled={isSubmitting}>
-            {isSubmitting ? "Signing in…" : "Login"}
+          <Button type="submit" className="mt-2 w-full">
+            Login
           </Button>
         </form>
       </CardContent>

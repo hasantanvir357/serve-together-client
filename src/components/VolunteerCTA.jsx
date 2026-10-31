@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowRight, HeartHandshake } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 export default function VolunteerCTA() {
   return (
@@ -33,14 +34,16 @@ export default function VolunteerCTA() {
             making a difference.
           </p>
 
-          <Button
-            size="lg"
-            className="mt-1 h-11 bg-white px-6 text-teal-700 transition-all hover:bg-white/90 hover:shadow-md"
-            render={<Link href="/create-event" />}
+          <Link
+            href="/create-event"
+            className={cn(
+              buttonVariants({ size: "lg" }),
+              "mt-1 h-11 bg-white px-6 text-teal-700 transition-all hover:bg-white/90 hover:shadow-md",
+            )}
           >
             Join as a Volunteer
             <ArrowRight aria-hidden="true" />
-          </Button>
+          </Link>
         </div>
       </div>
     </section>

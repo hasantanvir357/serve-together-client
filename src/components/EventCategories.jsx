@@ -1,7 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, CalendarDays, HeartHandshake, Users } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import {
   Card,
   CardContent,
@@ -140,13 +141,13 @@ export default function EventCategories() {
               </CardContent>
 
               <CardFooter>
-                <Button
-                  className="w-full"
-                  render={<Link href="/upcoming-events" />}
+                <Link
+                  href="/upcoming-events"
+                  className={cn(buttonVariants(), "w-full")}
                 >
                   Explore Events
                   <ArrowRight aria-hidden="true" />
-                </Button>
+                </Link>
               </CardFooter>
             </Card>
           );
