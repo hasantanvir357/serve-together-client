@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useAuth } from "@/context/AuthContext";
 import {
   Select,
   SelectContent,
@@ -52,7 +53,7 @@ type EventValues = {
   category: string;
   location: string;
   date: string;
-  targetVolunteers: string;
+  volunteersNeeded: string;
   imageUrl: string;
   description: string;
 };
@@ -76,8 +77,8 @@ function validate(values: EventValues): EventErrors {
   if (!values.date) {
     errors.date = "Please pick a date.";
   }
-  if (!values.targetVolunteers || Number(values.targetVolunteers) < 1) {
-    errors.targetVolunteers = "Target volunteers must be at least 1.";
+  if (!values.volunteersNeeded || Number(values.volunteersNeeded) < 1) {
+    errors.volunteersNeeded = "Target volunteers must be at least 1.";
   }
   if (!URL_PATTERN.test(values.imageUrl)) {
     errors.imageUrl = "Please enter a valid image URL (http/https).";
@@ -95,13 +96,14 @@ const INITIAL_VALUES: EventValues = {
   category: "",
   location: "",
   date: "",
-  targetVolunteers: "",
+  volunteersNeeded: "",
   imageUrl: "",
   description: "",
 };
 
 export default function CreateEventForm() {
   const router = useRouter();
+  const { user } = useAuth();
   const [values, setValues] = React.useState<EventValues>(INITIAL_VALUES);
   const [errors, setErrors] = React.useState<EventErrors>({});
   const [isSubmitting, setIsSubmitting] = React.useState(false);
@@ -125,18 +127,33 @@ export default function CreateEventForm() {
       const response = await fetch(EVENTS_API_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        // Field names match the Express server's expected schema exactly;
+        // volunteersNeeded must be a true number before it is serialized.
         body: JSON.stringify({
           title: values.title.trim(),
+          description: values.description.trim(),
           category: values.category,
           location: values.location.trim(),
           date: values.date,
-          targetVolunteers: Number(values.targetVolunteers),
+          volunteersNeeded: Number(values.volunteersNeeded),
           imageUrl: values.imageUrl,
-          description: values.description.trim(),
+          organizerEmail: user?.email ?? "",
         }),
       });
 
       if (!response.ok) {
+        // Surface the exact server error body for debugging.
+        const rawError = await response.text().catch(() => "");
+        let serverError: unknown = rawError;
+        try {
+          serverError = JSON.parse(rawError);
+        } catch {
+          // Not JSON — log the raw text as-is.
+        }
+        console.error(
+          `POST ${EVENTS_API_URL} failed with status ${response.status}:`,
+          serverError,
+        );
         throw new Error(`The server responded with status ${response.status}.`);
       }
 
@@ -255,22 +272,22 @@ export default function CreateEventForm() {
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="event-volunteers">Target Volunteers</Label>
+              <Label htmlFor="event-volunteers">Volunteers Needed</Label>
               <Input
                 id="event-volunteers"
-                name="targetVolunteers"
+                name="volunteersNeeded"
                 type="number"
                 min={1}
                 step={1}
                 placeholder="45"
                 required
-                value={values.targetVolunteers}
-                aria-invalid={errors.targetVolunteers ? true : undefined}
+                value={values.volunteersNeeded}
+                aria-invalid={errors.volunteersNeeded ? true : undefined}
                 onChange={(event) =>
-                  handleChange("targetVolunteers", event.target.value)
+                  handleChange("volunteersNeeded", event.target.value)
                 }
               />
-              {fieldErrors("targetVolunteers")}
+              {fieldErrors("volunteersNeeded")}
             </div>
           </div>
 
