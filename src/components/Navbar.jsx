@@ -9,7 +9,7 @@ import {
   CalendarCheck,
   CalendarCog,
   CalendarPlus,
-  HeartHandshake,
+  HandHeart,
   LogOut,
   Menu,
   Moon,
@@ -72,10 +72,10 @@ function Logo({ className, onClick }) {
       onClick={onClick}
       className={cn("flex shrink-0 items-center gap-2", className)}
     >
-      <span className="flex size-8 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600 ring-1 ring-emerald-500/20 dark:bg-emerald-500/15 dark:text-emerald-400">
-        <HeartHandshake className="size-5" aria-hidden="true" />
+      <span className="flex size-8 items-center justify-center rounded-lg bg-teal-500/10 text-teal-600 ring-1 ring-teal-500/20 dark:bg-teal-500/15 dark:text-teal-400">
+        <HandHeart className="size-5" aria-hidden="true" />
       </span>
-      <span className="bg-gradient-to-r from-emerald-600 to-teal-500 bg-clip-text text-lg font-semibold tracking-tight text-transparent dark:from-emerald-400 dark:to-teal-300">
+      <span className="bg-gradient-to-r from-teal-600 to-amber-500 bg-clip-text text-lg font-semibold tracking-tight text-transparent dark:from-teal-400 dark:to-amber-400">
         ServeTogether
       </span>
     </Link>
@@ -118,7 +118,7 @@ function AccountAvatar({ size = "default" }) {
 
   return (
     <Avatar size={size}>
-      <AvatarFallback className="bg-emerald-500/15 font-medium text-emerald-700! dark:text-emerald-400!">
+      <AvatarFallback className="bg-teal-500/15 font-medium text-teal-700! dark:text-teal-400!">
         {getInitials(user?.name)}
       </AvatarFallback>
     </Avatar>
@@ -232,7 +232,7 @@ function MobileMenu() {
                   className={cn(
                     MOBILE_LINK_CLASSES,
                     active &&
-                      "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400",
+                      "bg-teal-500/10 text-teal-700 dark:text-teal-400",
                   )}
                 >
                   <span className="flex items-center gap-2">
@@ -304,7 +304,7 @@ export default function Navbar() {
                 className={cn(
                   "rounded-md px-3 py-2 text-sm font-medium transition-colors",
                   active
-                    ? "text-emerald-600 dark:text-emerald-400"
+                    ? "text-teal-600 dark:text-teal-400"
                     : "text-muted-foreground hover:text-foreground",
                 )}
               >

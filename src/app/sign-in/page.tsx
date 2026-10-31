@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { HeartHandshake } from "lucide-react";
+import { HandHeart } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -32,10 +32,10 @@ export default function SignInPage() {
   return (
     <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col items-center justify-center gap-6 px-4 py-16">
       <div className="flex items-center gap-2">
-        <span className="flex size-9 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600 ring-1 ring-emerald-500/20 dark:bg-emerald-500/15 dark:text-emerald-400">
-          <HeartHandshake className="size-5" aria-hidden="true" />
+        <span className="flex size-9 items-center justify-center rounded-lg bg-teal-500/10 text-teal-600 ring-1 ring-teal-500/20 dark:bg-teal-500/15 dark:text-teal-400">
+          <HandHeart className="size-5" aria-hidden="true" />
         </span>
-        <span className="bg-gradient-to-r from-emerald-600 to-teal-500 bg-clip-text text-xl font-semibold tracking-tight text-transparent dark:from-emerald-400 dark:to-teal-300">
+        <span className="bg-gradient-to-r from-teal-600 to-amber-500 bg-clip-text text-xl font-semibold tracking-tight text-transparent dark:from-teal-400 dark:to-amber-400">
           ServeTogether
         </span>
       </div>
