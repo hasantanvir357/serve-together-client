@@ -36,7 +36,7 @@ export default function Hero() {
       />
 
       {/* Content */}
-      <div className="relative mx-auto flex w-full max-w-6xl flex-col items-start gap-6 px-4 py-20 md:w-3/5 md:py-28 lg:py-32">
+      <div className="relative mx-auto flex w-full max-w-6xl flex-col items-start gap-6 px-4 py-12 md:w-3/5 md:py-16">
         <span className="inline-flex items-center gap-2 rounded-full bg-teal-600/90 px-3 py-1.5 text-xs font-medium text-white ring-1 ring-teal-400/40 backdrop-blur">
           <Users className="size-3.5" aria-hidden="true" />
           5,000+ Volunteers Across Bangladesh
@@ -49,7 +49,7 @@ export default function Hero() {
           </span>
         </h1>
 
-        <p className="max-w-md text-base leading-relaxed text-white/85">
+        <p className="max-w-md text-base leading-relaxed text-slate-200 md:text-lg">
           Join local drives that deliver real impact — from planting trees to
           standing with families through floods and cold winters.
         </p>
@@ -58,7 +58,7 @@ export default function Hero() {
           {CATEGORIES.map((tag) => (
             <li
               key={tag}
-              className="rounded-full border border-white/25 bg-white/10 px-3 py-1 text-xs font-medium text-white/90 backdrop-blur"
+              className="rounded-full border border-white/30 bg-white/10 px-3 py-1 text-xs font-medium text-white/90 backdrop-blur transition-colors hover:border-white/50 hover:bg-white/20 hover:text-white"
             >
               {tag}
             </li>
@@ -73,7 +73,7 @@ export default function Hero() {
           <Button
             size="lg"
             variant="outline"
-            className="h-11 border-amber-400/50 bg-amber-500/15 px-6 text-amber-300 hover:bg-amber-500/25 hover:text-amber-200"
+            className="h-11 border-amber-400/50 bg-amber-500/15 px-6 text-amber-300 transition-colors hover:border-amber-400 hover:bg-amber-500/25 hover:text-amber-200"
             render={<Link href="/create-event" />}
           >
             Create Event
