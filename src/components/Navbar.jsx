@@ -10,6 +10,7 @@ import {
   CalendarCog,
   CalendarPlus,
   HandHeart,
+  LogIn,
   LogOut,
   Menu,
   Moon,
@@ -125,21 +126,13 @@ function AccountAvatar({ size = "default" }) {
   );
 }
 
-function SignInButton({ className }) {
-  return (
-    <Button className={className} render={<Link href="/sign-in" />}>
-      Sign In
-    </Button>
-  );
-}
-
-/** Desktop: Sign In button when logged out, Avatar + DropdownMenu when logged in. */
+/**
+ * Desktop avatar dropdown (shadcn <DropdownMenu> on Base UI Menu).
+ * Always rendered — shows Login when logged out, account links + Logout
+ * when logged in, so clicking the avatar always opens the menu.
+ */
 function UserMenu() {
   const { user, logout } = useAuth();
-
-  if (!user) {
-    return <SignInButton />;
-  }
 
   return (
     <DropdownMenu>
@@ -158,10 +151,10 @@ function UserMenu() {
       <DropdownMenuContent align="end" className="w-60">
         <DropdownMenuLabel>
           <span className="block text-sm font-medium text-foreground">
-            {user.name}
+            {user ? user.name : "Welcome"}
           </span>
           <span className="block text-xs text-muted-foreground">
-            {user.email}
+            {user ? user.email : "Sign in to sync your events"}
           </span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
@@ -172,10 +165,17 @@ function UserMenu() {
           </DropdownMenuItem>
         ))}
         <DropdownMenuSeparator />
-        <DropdownMenuItem variant="destructive" onClick={logout}>
-          <LogOut aria-hidden="true" />
-          Logout
-        </DropdownMenuItem>
+        {user ? (
+          <DropdownMenuItem variant="destructive" onClick={logout}>
+            <LogOut aria-hidden="true" />
+            Logout
+          </DropdownMenuItem>
+        ) : (
+          <DropdownMenuItem render={<Link href="/sign-in" />}>
+            <LogIn aria-hidden="true" />
+            Login
+          </DropdownMenuItem>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );
