@@ -35,7 +35,7 @@ export default function VolunteerCTA() {
           </p>
 
           <Link
-            href="/create-event"
+            href="/upcoming-events"
             className={cn(
               buttonVariants({ size: "lg" }),
               "mt-1 h-11 bg-white px-6 text-teal-700 transition-all hover:bg-white/90 hover:shadow-md",
