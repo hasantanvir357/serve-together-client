@@ -20,6 +20,8 @@ import { useAuth } from "@/context/AuthContext";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const URL_PATTERN = /^https?:\/\/\S+$/;
+const HAS_UPPERCASE = /.*[A-Z]/;
+const HAS_LOWERCASE = /.*[a-z]/;
 
 type RegisterValues = {
   name: string;
@@ -41,8 +43,13 @@ function validate(values: RegisterValues): RegisterErrors {
   if (!EMAIL_PATTERN.test(values.email)) {
     errors.email = "Please enter a valid email address.";
   }
-  if (values.password.length < 6) {
-    errors.password = "Password must be at least 6 characters.";
+  if (
+    values.password.length < 6 ||
+    !HAS_UPPERCASE.test(values.password) ||
+    !HAS_LOWERCASE.test(values.password)
+  ) {
+    errors.password =
+      "Password must be at least 6 characters long, contain at least one uppercase and one lowercase letter.";
   }
   // Image URL is optional, but must look like an absolute http(s) URL.
   if (values.imageUrl && !URL_PATTERN.test(values.imageUrl)) {
@@ -148,7 +155,7 @@ export default function RegisterPage() {
               id="register-password"
               name="password"
               type="password"
-              placeholder="At least 6 characters"
+              placeholder="Min 6 chars, upper & lowercase (e.g. TreeHugger1)"
               autoComplete="new-password"
               required
               value={values.password}
