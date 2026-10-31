@@ -15,6 +15,7 @@ import {
   Menu,
   Moon,
   Sun,
+  UserPlus,
   X,
 } from "lucide-react";
 
@@ -30,6 +31,7 @@ import {
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -149,21 +151,25 @@ function UserMenu() {
         <AccountAvatar />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-60">
-        <DropdownMenuLabel>
-          <span className="block text-sm font-medium text-foreground">
-            {user ? user.name : "Welcome"}
-          </span>
-          <span className="block text-xs text-muted-foreground">
-            {user ? user.email : "Sign in to sync your events"}
-          </span>
-        </DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        {ACCOUNT_LINKS.map(({ label, href, icon: Icon }) => (
-          <DropdownMenuItem key={href} render={<Link href={href} />}>
-            <Icon aria-hidden="true" />
-            {label}
-          </DropdownMenuItem>
-        ))}
+        {/* DropdownMenuLabel is Menu.GroupLabel and must live inside a Group
+            or Base UI throws "MenuGroupContext is missing" on open. */}
+        <DropdownMenuGroup>
+          <DropdownMenuLabel>
+            <span className="block text-sm font-medium text-foreground">
+              {user ? user.name : "Welcome"}
+            </span>
+            <span className="block text-xs text-muted-foreground">
+              {user ? user.email : "Sign in to sync your events"}
+            </span>
+          </DropdownMenuLabel>
+          {user &&
+            ACCOUNT_LINKS.map(({ label, href, icon: Icon }) => (
+              <DropdownMenuItem key={href} render={<Link href={href} />}>
+                <Icon aria-hidden="true" />
+                {label}
+              </DropdownMenuItem>
+            ))}
+        </DropdownMenuGroup>
         <DropdownMenuSeparator />
         {user ? (
           <DropdownMenuItem variant="destructive" onClick={logout}>
@@ -171,10 +177,16 @@ function UserMenu() {
             Logout
           </DropdownMenuItem>
         ) : (
-          <DropdownMenuItem render={<Link href="/sign-in" />}>
-            <LogIn aria-hidden="true" />
-            Login
-          </DropdownMenuItem>
+          <>
+            <DropdownMenuItem render={<Link href="/sign-in" />}>
+              <LogIn aria-hidden="true" />
+              Login
+            </DropdownMenuItem>
+            <DropdownMenuItem render={<Link href="/sign-in" />}>
+              <UserPlus aria-hidden="true" />
+              Register
+            </DropdownMenuItem>
+          </>
         )}
       </DropdownMenuContent>
     </DropdownMenu>
