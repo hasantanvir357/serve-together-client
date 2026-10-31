@@ -1,6 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, HandHeart, Plus, Users } from "lucide-react";
+import { ArrowRight, Plus, Users } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import banner from "@/assets/banner-bg.jpg";
 
 const CATEGORIES = [
   "Tree Plantation",
@@ -12,22 +14,42 @@ const CATEGORIES = [
 
 export default function Hero() {
   return (
-    <section className="mx-auto flex w-full max-w-6xl flex-1 flex-col items-center gap-12 px-4 py-16 md:flex-row md:gap-8 md:py-24">
-      {/* Left: copy */}
-      <div className="flex w-full flex-col items-start gap-6 md:w-1/2">
-        <span className="inline-flex items-center gap-2 rounded-full bg-teal-500/10 px-3 py-1.5 text-xs font-medium text-teal-700 ring-1 ring-teal-500/20 dark:bg-teal-500/15 dark:text-teal-300">
+    <section className="relative w-full overflow-hidden">
+      {/* Full-width background image */}
+      <Image
+        src={banner}
+        alt="Volunteers serving a rural community"
+        fill
+        priority
+        sizes="100vw"
+        className="object-cover"
+      />
+
+      {/* Dark/gradient overlay: heavy on the left for readability, fades to the right */}
+      <div
+        aria-hidden="true"
+        className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/55 to-black/20"
+      />
+      <div
+        aria-hidden="true"
+        className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent"
+      />
+
+      {/* Content */}
+      <div className="relative mx-auto flex w-full max-w-6xl flex-col items-start gap-6 px-4 py-20 md:w-3/5 md:py-28 lg:py-32">
+        <span className="inline-flex items-center gap-2 rounded-full bg-teal-600/90 px-3 py-1.5 text-xs font-medium text-white ring-1 ring-teal-400/40 backdrop-blur">
           <Users className="size-3.5" aria-hidden="true" />
           5,000+ Volunteers Across Bangladesh
         </span>
 
-        <h1 className="text-4xl font-bold leading-tight tracking-tight text-foreground sm:text-5xl">
+        <h1 className="text-4xl font-bold leading-tight tracking-tight text-white sm:text-5xl lg:text-6xl">
           Empower Rural Communities Through{" "}
-          <span className="bg-gradient-to-r from-teal-600 to-amber-500 bg-clip-text text-transparent dark:from-teal-400 dark:to-amber-400">
+          <span className="bg-gradient-to-r from-[#0D9488] to-[#F59E0B] bg-clip-text text-transparent">
             Action &amp; Service
           </span>
         </h1>
 
-        <p className="max-w-md text-base leading-relaxed text-muted-foreground">
+        <p className="max-w-md text-base leading-relaxed text-white/85">
           Join local drives that deliver real impact — from planting trees to
           standing with families through floods and cold winters.
         </p>
@@ -36,7 +58,7 @@ export default function Hero() {
           {CATEGORIES.map((tag) => (
             <li
               key={tag}
-              className="rounded-full border border-border bg-muted/50 px-3 py-1 text-xs font-medium text-foreground/80"
+              className="rounded-full border border-white/25 bg-white/10 px-3 py-1 text-xs font-medium text-white/90 backdrop-blur"
             >
               {tag}
             </li>
@@ -44,50 +66,19 @@ export default function Hero() {
         </ul>
 
         <div className="flex flex-wrap gap-3 pt-2">
-          <Link
-            href="/upcoming-events"
-            className="inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-primary px-6 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90"
-          >
+          <Button size="lg" className="h-11 px-6" render={<Link href="/upcoming-events" />}>
             Explore Events
-            <ArrowRight className="size-4" aria-hidden="true" />
-          </Link>
-          <Link
-            href="/create-event"
-            className="inline-flex h-11 items-center justify-center gap-2 rounded-lg border border-amber-500/40 bg-amber-500/10 px-6 text-sm font-medium text-amber-700 transition-colors hover:bg-amber-500/15 dark:text-amber-400"
+            <ArrowRight aria-hidden="true" />
+          </Button>
+          <Button
+            size="lg"
+            variant="outline"
+            className="h-11 border-amber-400/50 bg-amber-500/15 px-6 text-amber-300 hover:bg-amber-500/25 hover:text-amber-200"
+            render={<Link href="/create-event" />}
           >
-            <Plus className="size-4" aria-hidden="true" />
             Create Event
-          </Link>
-        </div>
-      </div>
-
-      {/* Right: photo card with glassmorphism */}
-      <div className="relative w-full md:w-1/2">
-        <div className="relative aspect-[4/3] w-full overflow-hidden rounded-3xl border border-white/20 shadow-2xl ring-1 ring-black/5">
-          <Image
-            src="https://images.unsplash.com/photo-1593113598332-cd288d649433?auto=format&fit=crop&w=1600&q=80"
-            alt="Bangladeshi volunteers distributing aid during a rural community service drive"
-            fill
-            priority
-            sizes="(max-width: 768px) 100vw, 50vw"
-            className="object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent" />
-
-          {/* Glass stat card */}
-          <div className="absolute bottom-4 left-4 right-4 flex items-center gap-3 rounded-2xl border border-white/25 bg-white/15 p-4 backdrop-blur-md dark:bg-black/25">
-            <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-teal-500/20 text-teal-600 ring-1 ring-teal-400/30 dark:text-teal-300">
-              <HandHeart className="size-5" aria-hidden="true" />
-            </span>
-            <div className="min-w-0">
-              <p className="text-sm font-semibold text-white">
-                Hands that help, hearts that serve
-              </p>
-              <p className="truncate text-xs text-white/80">
-                Community-led service across 64 districts
-              </p>
-            </div>
-          </div>
+            <Plus aria-hidden="true" />
+          </Button>
         </div>
       </div>
     </section>

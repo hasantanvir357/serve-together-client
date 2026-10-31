@@ -16,7 +16,7 @@ export const metadata: Metadata = {
   title: "ServeTogether | Empowering Community Action",
   description:
     "Join 5,000+ volunteers across Bangladesh for tree plantation, blood drives, flood relief, winter clothes distribution and community cleanup events.",
-  icons: { icon: "/favicon.ico" },
+  icons: { icon: "/favicon.png" },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
