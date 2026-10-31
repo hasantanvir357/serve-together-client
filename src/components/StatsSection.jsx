@@ -1,4 +1,4 @@
-import { CheckCircle2, HeartHandshake, MapPin, Users } from "lucide-react";
+import { CheckCircle2, HeartHandshake, MapPin, Sparkles, Users } from "lucide-react";
 
 const STATS = [
   { value: "5,000+", label: "Active Volunteers", icon: Users },
@@ -11,8 +11,27 @@ export default function StatsSection() {
   return (
     <section
       aria-label="Our impact in numbers"
-      className="mx-auto w-full max-w-6xl px-4 py-8 md:py-10"
+      className="mx-auto w-full max-w-6xl px-4 py-10 md:py-12"
     >
+      {/* Header */}
+      <div className="mb-8 flex flex-col items-center gap-3 text-center">
+        <span className="inline-flex items-center gap-2 rounded-full bg-amber-500/10 px-3 py-1.5 text-xs font-semibold tracking-wider text-amber-700 uppercase ring-1 ring-amber-500/25 dark:bg-amber-500/15 dark:text-amber-400">
+          <Sparkles className="size-3.5" aria-hidden="true" />
+          Our Impact at a Glance
+        </span>
+        <h2 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+          Our Collective Impact{" "}
+          <span className="bg-gradient-to-r from-[#0D9488] to-[#F59E0B] bg-clip-text text-transparent">
+            Across Bangladesh
+          </span>
+        </h2>
+        <p className="max-w-2xl text-sm leading-relaxed text-muted-foreground sm:text-base">
+          Quantifying hope, support, and community action in every corner of
+          the nation.
+        </p>
+      </div>
+
+      {/* Metrics */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         {STATS.map((stat, index) => {
           const Icon = stat.icon;
