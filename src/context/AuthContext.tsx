@@ -13,41 +13,52 @@ import * as React from "react";
  * ...) without touching consumers.
  */
 
+export type AuthUser = {
+  name: string;
+  email: string;
+  image?: string;
+};
+
+export type AuthContextValue = {
+  user: AuthUser | null;
+  login: (user: AuthUser) => void;
+  logout: () => void;
+};
+
+const AuthContext = React.createContext<AuthContextValue | null>(null);
+
 const STORAGE_KEY = "serve-together-auth";
+
 // Fired in the same tab after login/logout (the native `storage` event only
 // fires for changes made by other tabs).
 const CHANGE_EVENT = "serve-together:auth-change";
 
-/**
- * @typedef {{ name: string, email: string }} AuthUser
- * @typedef {{
- *   user: AuthUser | null,
- *   login: (name: string, email: string) => AuthUser,
- *   logout: () => void,
- * }} AuthValue
- */
-
-/** @type {React.Context<AuthValue | null>} */
-const AuthContext = React.createContext(null);
-
 // Cached snapshot — React requires getSnapshot() to return the same reference
 // as long as the underlying value has not changed.
-/** @type {AuthUser | null | undefined} */
-let cachedUser;
+let cachedUser: AuthUser | null | undefined;
 
-function parseUser(raw) {
+function parseUser(raw: string | null): AuthUser | null {
   if (!raw) {
     return null;
   }
+
   try {
-    const parsed = JSON.parse(raw);
-    return parsed && typeof parsed.name === "string" ? parsed : null;
+    const parsed: unknown = JSON.parse(raw);
+    if (
+      parsed &&
+      typeof parsed === "object" &&
+      typeof (parsed as AuthUser).name === "string" &&
+      typeof (parsed as AuthUser).email === "string"
+    ) {
+      return parsed as AuthUser;
+    }
+    return null;
   } catch {
     return null;
   }
 }
 
-function readUser() {
+function readUser(): AuthUser | null {
   try {
     return parseUser(window.localStorage.getItem(STORAGE_KEY));
   } catch {
@@ -55,8 +66,9 @@ function readUser() {
   }
 }
 
-function writeUser(user) {
+function writeUser(user: AuthUser | null) {
   cachedUser = user;
+
   try {
     if (user) {
       window.localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
@@ -66,10 +78,11 @@ function writeUser(user) {
   } catch {
     // Storage unavailable (private mode, quota, ...) — state still updates in memory.
   }
+
   window.dispatchEvent(new Event(CHANGE_EVENT));
 }
 
-function getSnapshot() {
+function getSnapshot(): AuthUser | null {
   if (typeof window === "undefined") {
     return null;
   }
@@ -79,13 +92,14 @@ function getSnapshot() {
   return cachedUser;
 }
 
-function getServerSnapshot() {
+function getServerSnapshot(): AuthUser | null {
   return null;
 }
 
-function subscribe(onStoreChange) {
+function subscribe(onStoreChange: () => void) {
   const handleLocalChange = () => onStoreChange();
-  const handleStorage = (event) => {
+
+  const handleStorage = (event: StorageEvent) => {
     if (event.key === STORAGE_KEY || event.key === null) {
       cachedUser = readUser();
       onStoreChange();
@@ -101,33 +115,30 @@ function subscribe(onStoreChange) {
   };
 }
 
-export function AuthProvider({ children }) {
+export function AuthProvider({ children }: { children: React.ReactNode }) {
   const user = React.useSyncExternalStore(
     subscribe,
     getSnapshot,
     getServerSnapshot,
   );
 
-  const login = React.useCallback((name, email) => {
-    const nextUser = { name, email };
+  const login = React.useCallback((nextUser: AuthUser) => {
     writeUser(nextUser);
-    return nextUser;
   }, []);
 
   const logout = React.useCallback(() => {
     writeUser(null);
   }, []);
 
-  /** @type {AuthValue} */
-  const value = { user, login, logout };
+  const value: AuthContextValue = React.useMemo(
+    () => ({ user, login, logout }),
+    [user, login, logout],
+  );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
-/**
- * @returns {AuthValue}
- */
-export function useAuth() {
+export function useAuth(): AuthContextValue {
   const context = React.useContext(AuthContext);
   if (!context) {
     throw new Error("useAuth must be used within an AuthProvider");

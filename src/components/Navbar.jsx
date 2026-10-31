@@ -19,8 +19,8 @@ import {
   X,
 } from "lucide-react";
 
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button, buttonVariants } from "@/components/ui/button";
 import {
   Dialog,
   DialogOverlay,
@@ -121,6 +121,9 @@ function AccountAvatar({ size = "default" }) {
 
   return (
     <Avatar size={size}>
+      {user?.image ? (
+        <AvatarImage src={user.image} alt={user.name} />
+      ) : null}
       <AvatarFallback className="bg-teal-500/15 font-medium text-teal-700! dark:text-teal-400!">
         {getInitials(user?.name)}
       </AvatarFallback>
@@ -178,11 +181,11 @@ function UserMenu() {
           </DropdownMenuItem>
         ) : (
           <>
-            <DropdownMenuItem render={<Link href="/sign-in" />}>
+            <DropdownMenuItem render={<Link href="/login" />}>
               <LogIn aria-hidden="true" />
               Login
             </DropdownMenuItem>
-            <DropdownMenuItem render={<Link href="/sign-in" />}>
+            <DropdownMenuItem render={<Link href="/register" />}>
               <UserPlus aria-hidden="true" />
               Register
             </DropdownMenuItem>
@@ -282,12 +285,13 @@ function MobileMenu() {
                 </Button>
               </>
             ) : (
-              <Button
-                className="w-full"
-                render={<Link href="/sign-in" onClick={close} />}
+              <Link
+                href="/login"
+                onClick={close}
+                className={cn(buttonVariants(), "w-full")}
               >
-                Sign In
-              </Button>
+                Login
+              </Link>
             )}
           </div>
         </DialogPrimitive.Popup>

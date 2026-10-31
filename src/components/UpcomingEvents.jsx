@@ -140,13 +140,13 @@ export default function UpcomingEvents() {
               </CardContent>
 
               <CardFooter>
-                <Button
-                  className="w-full"
-                  render={<Link href="/upcoming-events" />}
+                <Link
+                  href="/upcoming-events"
+                  className={cn(buttonVariants(), "w-full")}
                 >
                   Explore Events
                   <ArrowRight aria-hidden="true" />
-                </Button>
+                </Link>
               </CardFooter>
             </Card>
           );

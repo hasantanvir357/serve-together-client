@@ -1,7 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, Plus, Users } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import banner from "@/assets/banner-bg.jpg";
 
 const CATEGORIES = [
@@ -67,19 +68,23 @@ export default function Hero() {
           </ul>
 
           <div className="flex flex-wrap gap-3">
-            <Button size="lg" className="h-11 px-6" render={<Link href="/upcoming-events" />}>
+            <Link
+              href="/upcoming-events"
+              className={cn(buttonVariants({ size: "lg" }), "h-11 px-6")}
+            >
               Explore Events
               <ArrowRight aria-hidden="true" />
-            </Button>
-            <Button
-              size="lg"
-              variant="outline"
-              className="h-11 border-amber-400/50 bg-amber-500/15 px-6 text-amber-300 transition-colors hover:border-amber-400 hover:bg-amber-500/25 hover:text-amber-200"
-              render={<Link href="/create-event" />}
+            </Link>
+            <Link
+              href="/create-event"
+              className={cn(
+                buttonVariants({ variant: "outline", size: "lg" }),
+                "h-11 border-amber-400/50 bg-amber-500/15 px-6 text-amber-300 transition-colors hover:border-amber-400 hover:bg-amber-500/25 hover:text-amber-200",
+              )}
             >
               Create Event
               <Plus aria-hidden="true" />
-            </Button>
+            </Link>
           </div>
         </div>
       </div>
