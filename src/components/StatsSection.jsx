@@ -15,13 +15,13 @@ export default function StatsSection() {
     >
       {/* Header */}
       <div className="mb-8 flex flex-col items-center gap-3 text-center">
-        <span className="inline-flex items-center gap-2 rounded-full bg-amber-500/10 px-3 py-1.5 text-xs font-semibold tracking-wider text-amber-700 uppercase ring-1 ring-amber-500/25 dark:bg-amber-500/15 dark:text-amber-400">
+        <span className="inline-flex items-center gap-2 rounded-full bg-secondary/10 px-3 py-1.5 text-xs font-semibold tracking-wider text-secondary uppercase ring-1 ring-secondary/20">
           <Sparkles className="size-3.5" aria-hidden="true" />
           Our Impact at a Glance
         </span>
         <h2 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
           Our Collective Impact{" "}
-          <span className="bg-gradient-to-r from-[#0D9488] to-[#F59E0B] bg-clip-text text-transparent">
+          <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
             Across Bangladesh
           </span>
         </h2>
@@ -35,18 +35,17 @@ export default function StatsSection() {
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         {STATS.map((stat, index) => {
           const Icon = stat.icon;
-          const isTeal = index % 2 === 0;
+          const isPrimary = index % 2 === 0;
           return (
             <div
               key={stat.label}
               className="flex items-center gap-3 rounded-xl border border-border bg-card p-4 shadow-sm transition-colors hover:border-foreground/20"
             >
               <span
-                className={`flex size-10 shrink-0 items-center justify-center rounded-lg ring-1 ${
-                  isTeal
-                    ? "bg-teal-500/10 text-teal-600 ring-teal-500/20 dark:text-teal-300"
-                    : "bg-amber-500/10 text-amber-600 ring-amber-500/25 dark:text-amber-400"
-                }`}
+                className={`flex size-10 shrink-0 items-center justify-center rounded-lg ring-1 ${isPrimary
+                    ? "bg-primary/10 text-primary ring-primary/20"
+                    : "bg-secondary/10 text-secondary ring-secondary/20"
+                  }`}
               >
                 <Icon className="size-5" aria-hidden="true" />
               </span>

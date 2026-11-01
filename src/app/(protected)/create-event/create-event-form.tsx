@@ -186,7 +186,7 @@ export default function CreateEventForm() {
   return (
     <Card className="w-full max-w-xl">
       <CardHeader className="text-center">
-        <span className="mx-auto flex size-9 items-center justify-center rounded-lg bg-teal-500/10 text-teal-600 ring-1 ring-teal-500/20 dark:bg-teal-500/15 dark:text-teal-400">
+        <span className="mx-auto flex size-9 items-center justify-center rounded-lg bg-primary/10 text-primary ring-1 ring-primary/20">
           <CalendarPlus className="size-5" aria-hidden="true" />
         </span>
         <CardTitle className="text-lg">Create Event</CardTitle>
@@ -357,7 +357,7 @@ export default function CreateEventForm() {
           Created events appear under{" "}
           <Link
             href="/manage-events"
-            className="font-medium text-teal-600 hover:underline dark:text-teal-400"
+            className="font-medium text-primary hover:underline"
           >
             Manage Events
           </Link>{" "}

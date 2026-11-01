@@ -58,15 +58,15 @@ type EventItem = {
 /** Consistent accent colors per category badge. */
 const CATEGORY_STYLES: Record<string, string> = {
   "Tree Plantation":
-    "bg-emerald-500/10 text-emerald-700 ring-emerald-500/20 dark:text-emerald-400",
+    "bg-primary/10 text-primary ring-primary/20",
   "Winter Clothes":
-    "bg-sky-500/10 text-sky-700 ring-sky-500/20 dark:text-sky-400",
+    "bg-secondary/10 text-secondary ring-secondary/20",
   "Blood Drive":
-    "bg-rose-500/10 text-rose-700 ring-rose-500/20 dark:text-rose-400",
+    "bg-primary/15 text-primary ring-primary/25",
   Cleanup:
-    "bg-amber-500/10 text-amber-700 ring-amber-500/20 dark:text-amber-400",
+    "bg-secondary/15 text-secondary ring-secondary/25",
   Education:
-    "bg-violet-500/10 text-violet-700 ring-violet-500/20 dark:text-violet-400",
+    "bg-primary/10 text-primary ring-primary/20",
 };
 
 function CategoryBadge({ category }: { category: string }) {
@@ -97,8 +97,8 @@ function EventImage({
   const showPlaceholder = !src || failed;
 
   return showPlaceholder ? (
-    <div className="flex aspect-[16/9] w-full items-center justify-center bg-gradient-to-br from-teal-500/15 to-emerald-500/10">
-      <CalendarDays className="size-10 text-teal-600/60 dark:text-teal-400/60" />
+    <div className="flex aspect-[16/9] w-full items-center justify-center bg-gradient-to-br from-primary/15 to-secondary/10">
+      <CalendarDays className="size-10 text-primary/60" />
     </div>
   ) : (
     <img
@@ -268,7 +268,7 @@ export default function UpcomingEvents() {
       ) : filteredEvents.length === 0 ? (
         <Card>
           <CardHeader className="items-center py-10 text-center">
-            <span className="mx-auto flex size-9 items-center justify-center rounded-lg bg-teal-500/10 text-teal-600 ring-1 ring-teal-500/20 dark:bg-teal-500/15 dark:text-teal-400">
+            <span className="mx-auto flex size-9 items-center justify-center rounded-lg bg-primary/10 text-primary ring-1 ring-primary/20">
               <CalendarDays className="size-5" aria-hidden="true" />
             </span>
             <CardTitle className="text-lg">

@@ -51,9 +51,8 @@ const ACCOUNT_LINKS = [
 const MOBILE_LINK_CLASSES =
   "rounded-md px-2 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground";
 
-// Client-only detection without setState-in-effect: the server snapshot is
-// `false`, and React re-renders with `true` right after hydration.
-const subscribeNoop = () => () => {};
+
+const subscribeNoop = () => () => { };
 const getClientSnapshot = () => true;
 const getServerSnapshot = () => false;
 
@@ -75,10 +74,10 @@ function Logo({ className, onClick }) {
       onClick={onClick}
       className={cn("flex shrink-0 items-center gap-2", className)}
     >
-      <span className="flex size-8 items-center justify-center rounded-lg bg-teal-500/10 text-teal-600 ring-1 ring-teal-500/20 dark:bg-teal-500/15 dark:text-teal-400">
+      <span className="flex size-8 items-center justify-center rounded-lg bg-primary/10 text-primary ring-1 ring-primary/20">
         <HandHeart className="size-5" aria-hidden="true" />
       </span>
-      <span className="bg-gradient-to-r from-teal-600 to-amber-500 bg-clip-text text-lg font-semibold tracking-tight text-transparent dark:from-teal-400 dark:to-amber-400">
+      <span className="bg-linear-to-r from-primary to-secondary bg-clip-text text-lg font-semibold tracking-tight text-transparent">
         ServeTogether
       </span>
     </Link>
@@ -93,8 +92,7 @@ function ThemeToggle({ className, showLabel = false }) {
     getServerSnapshot,
   );
 
-  // Avoid rendering the wrong icon before next-themes resolves the theme
-  // (would cause a hydration mismatch against server HTML).
+
   const isDark = mounted && resolvedTheme === "dark";
 
   return (
@@ -124,18 +122,13 @@ function AccountAvatar({ size = "default" }) {
       {user?.image ? (
         <AvatarImage src={user.image} alt={user.name} />
       ) : null}
-      <AvatarFallback className="bg-teal-500/15 font-medium text-teal-700! dark:text-teal-400!">
+      <AvatarFallback className="bg-primary/15 font-medium text-primary!">
         {getInitials(user?.name)}
       </AvatarFallback>
     </Avatar>
   );
 }
 
-/**
- * Desktop avatar dropdown (shadcn <DropdownMenu> on Base UI Menu).
- * Always rendered — shows Login when logged out, account links + Logout
- * when logged in, so clicking the avatar always opens the menu.
- */
 function UserMenu() {
   const { user, logout } = useAuth();
 
@@ -247,7 +240,7 @@ function MobileMenu() {
                   className={cn(
                     MOBILE_LINK_CLASSES,
                     active &&
-                      "bg-teal-500/10 text-teal-700 dark:text-teal-400",
+                    "bg-primary/10 text-primary",
                   )}
                 >
                   <span className="flex items-center gap-2">
@@ -304,7 +297,7 @@ export default function Navbar() {
   const pathname = usePathname();
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-border bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/70">
+    <header className="sticky top-0 z-40 w-full border-b border-border bg-background/80 backdrop-blur supports-backdrop-filter:bg-background/70">
       <div className="mx-auto flex h-14 w-full max-w-6xl items-center justify-between gap-3 px-4">
         {/* Left: logo */}
         <Logo />
@@ -320,7 +313,7 @@ export default function Navbar() {
                 className={cn(
                   "rounded-md px-3 py-2 text-sm font-medium transition-colors",
                   active
-                    ? "text-teal-600 dark:text-teal-400"
+                    ? "text-primary"
                     : "text-muted-foreground hover:text-foreground",
                 )}
               >

@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 export default function VolunteerCTA() {
   return (
     <section aria-label="Join as a volunteer" className="w-full px-4 pb-12 md:pb-16">
-      <div className="relative mx-auto w-full max-w-6xl overflow-hidden rounded-3xl bg-gradient-to-r from-[#0D9488] to-[#14b8a6] px-6 py-12 shadow-lg md:px-12 md:py-16">
+      <div className="relative mx-auto w-full max-w-6xl overflow-hidden rounded-3xl bg-gradient-to-r from-primary to-secondary px-6 py-12 shadow-lg md:px-12 md:py-16">
         {/* Decorative rings */}
         <div
           aria-hidden="true"
@@ -38,7 +38,7 @@ export default function VolunteerCTA() {
             href="/upcoming-events"
             className={cn(
               buttonVariants({ size: "lg" }),
-              "mt-1 h-11 bg-white px-6 text-teal-700 transition-all hover:bg-white/90 hover:shadow-md",
+              "mt-1 h-11 bg-white px-6 text-primary transition-all hover:bg-white/90 hover:shadow-md",
             )}
           >
             Join as a Volunteer

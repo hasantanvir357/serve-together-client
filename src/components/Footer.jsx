@@ -44,20 +44,20 @@ function FooterHeading({ children }) {
 
 export default function Footer() {
   return (
-    <footer className="border-t border-white/10 bg-zinc-950 text-zinc-400">
+    <footer className="border-t border-[#11a6de]/20 bg-[#091723] text-white/60">
       <div className="mx-auto w-full max-w-6xl px-4 py-12">
         <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-4">
           {/* Brand */}
           <div className="lg:col-span-2 sm:col-span-2">
             <Link href="/" className="flex w-fit items-center gap-2">
-              <span className="flex size-8 items-center justify-center rounded-lg bg-teal-500/15 text-teal-400 ring-1 ring-teal-400/30">
+              <span className="flex size-8 items-center justify-center rounded-lg bg-primary/15 text-primary ring-1 ring-primary/30">
                 <HandHeart className="size-5" aria-hidden="true" />
               </span>
-              <span className="bg-gradient-to-r from-teal-400 to-amber-400 bg-clip-text text-lg font-semibold tracking-tight text-transparent">
+              <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-lg font-semibold tracking-tight text-transparent">
                 ServeTogether
               </span>
             </Link>
-            <p className="mt-4 max-w-sm text-sm leading-relaxed text-zinc-400">
+            <p className="mt-4 max-w-sm text-sm leading-relaxed text-white/60">
               Empowering rural communities across Bangladesh through
               volunteer-led drives — planting trees, serving blood camps,
               delivering relief, and caring for neighbors.
@@ -68,7 +68,7 @@ export default function Footer() {
                   key={label}
                   href={href}
                   aria-label={label}
-                  className="flex size-9 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-zinc-300 transition-colors hover:border-teal-400/50 hover:bg-teal-500/15 hover:text-teal-300"
+                  className="flex size-9 items-center justify-center rounded-lg border border-[#11a6de]/20 bg-[#11a6de]/10 text-white/70 transition-colors hover:border-primary/50 hover:bg-primary/15 hover:text-[#11a6de]"
                 >
                   <Icon className="size-4" aria-hidden="true" />
                 </a>
@@ -84,7 +84,7 @@ export default function Footer() {
                 <li key={label}>
                   <Link
                     href={href}
-                    className="text-sm transition-colors hover:text-teal-300"
+                    className="text-sm transition-colors hover:text-primary"
                   >
                     {label}
                   </Link>
@@ -100,7 +100,7 @@ export default function Footer() {
               {CONTACTS.map(({ icon: Icon, text }) => (
                 <li key={text} className="flex items-start gap-2 text-sm">
                   <Icon
-                    className="mt-0.5 size-4 shrink-0 text-amber-400"
+                    className="mt-0.5 size-4 shrink-0 text-secondary"
                     aria-hidden="true"
                   />
                   <span>{text}</span>
@@ -112,10 +112,10 @@ export default function Footer() {
       </div>
 
       {/* Copyright */}
-      <div className="border-t border-white/10">
+      <div className="border-t border-[#11a6de]/20">
         <div className="mx-auto flex w-full max-w-6xl flex-col items-center justify-between gap-2 px-4 py-5 text-xs sm:flex-row">
           <p>© 2026 ServeTogether. All rights reserved.</p>
-          <p className="text-zinc-500">
+          <p className="text-white/40">
             Made with 💚 by volunteers, for volunteers.
           </p>
         </div>

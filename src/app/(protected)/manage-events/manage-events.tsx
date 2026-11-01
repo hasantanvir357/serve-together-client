@@ -416,7 +416,7 @@ export default function ManageEvents() {
       ) : events.length === 0 ? (
         <Card>
           <CardHeader className="items-center py-10 text-center">
-            <span className="mx-auto flex size-9 items-center justify-center rounded-lg bg-teal-500/10 text-teal-600 ring-1 ring-teal-500/20 dark:bg-teal-500/15 dark:text-teal-400">
+            <span className="mx-auto flex size-9 items-center justify-center rounded-lg bg-primary/10 text-primary ring-1 ring-primary/20">
               <CalendarDays className="size-5" aria-hidden="true" />
             </span>
             <CardTitle className="text-lg">No events yet</CardTitle>

@@ -78,7 +78,7 @@ export default function UpcomingEvents() {
     >
       {/* Header */}
       <div className="mb-8 flex flex-col items-start gap-2">
-        <span className="inline-flex items-center gap-2 rounded-full bg-teal-500/10 px-3 py-1.5 text-xs font-medium text-teal-700 ring-1 ring-teal-500/20 dark:bg-teal-500/15 dark:text-teal-300">
+        <span className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary ring-1 ring-primary/20">
           <CalendarDays className="size-3.5" aria-hidden="true" />
           Get involved
         </span>
@@ -94,7 +94,7 @@ export default function UpcomingEvents() {
       {/* Event grid */}
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
         {EVENTS.map((event, index) => {
-          const isTeal = index % 2 === 0;
+          const isPrimary = index % 2 === 0;
           return (
             <Card
               key={event.title}
@@ -111,7 +111,7 @@ export default function UpcomingEvents() {
                 {/* Status badge */}
                 <span
                   className={`absolute top-3 left-3 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[0.7rem] font-semibold text-white shadow-sm backdrop-blur ${
-                    isTeal ? "bg-teal-600/90" : "bg-amber-500/90"
+                    isPrimary ? "bg-primary/90" : "bg-secondary/90"
                   }`}
                 >
                   <span className="size-1.5 rounded-full bg-white" aria-hidden="true" />

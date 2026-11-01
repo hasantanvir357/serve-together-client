@@ -36,7 +36,7 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
     return (
       <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col items-center justify-center gap-4 px-4 py-16 text-center">
         <LoaderCircle
-          className="size-6 animate-spin text-teal-600 dark:text-teal-400"
+          className="size-6 animate-spin text-primary"
           aria-hidden="true"
         />
         <p className="text-sm text-muted-foreground">

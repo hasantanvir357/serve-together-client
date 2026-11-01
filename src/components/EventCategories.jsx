@@ -80,7 +80,7 @@ export default function EventCategories() {
   return (
     <section className="mx-auto w-full max-w-6xl px-4 py-12 md:py-16">
       <div className="mb-8 flex flex-col items-start gap-2">
-        <span className="inline-flex items-center gap-2 rounded-full bg-teal-500/10 px-3 py-1.5 text-xs font-medium text-teal-700 ring-1 ring-teal-500/20 dark:bg-teal-500/15 dark:text-teal-300">
+        <span className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary ring-1 ring-primary/20">
           <HeartHandshake className="size-3.5" aria-hidden="true" />
           Causes you can serve
         </span>
@@ -95,7 +95,7 @@ export default function EventCategories() {
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
         {CATEGORIES.map((category, index) => {
-          const isTeal = index % 2 === 0;
+          const isPrimary = index % 2 === 0;
           return (
             <Card
               key={category.title}
@@ -114,9 +114,9 @@ export default function EventCategories() {
               <CardHeader>
                 <span
                   className={`inline-flex w-fit items-center rounded-full px-2.5 py-1 text-[0.7rem] font-medium ${
-                    isTeal
-                      ? "bg-teal-500/10 text-teal-700 ring-1 ring-teal-500/20 dark:bg-teal-500/15 dark:text-teal-300"
-                      : "bg-amber-500/10 text-amber-700 ring-1 ring-amber-500/20 dark:bg-amber-500/15 dark:text-amber-400"
+                    isPrimary
+                      ? "bg-primary/10 text-primary ring-1 ring-primary/20"
+                      : "bg-secondary/10 text-secondary ring-1 ring-secondary/20"
                   }`}
                 >
                   {category.title}

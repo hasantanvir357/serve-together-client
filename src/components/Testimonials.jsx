@@ -47,13 +47,13 @@ export default function Testimonials() {
     >
       {/* Header */}
       <div className="mb-8 flex flex-col items-center gap-3 text-center">
-        <span className="inline-flex items-center gap-2 rounded-full bg-teal-500/10 px-3 py-1.5 text-xs font-medium text-teal-700 ring-1 ring-teal-500/20 dark:bg-teal-500/15 dark:text-teal-300">
+        <span className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary ring-1 ring-primary/20">
           <Heart className="size-3.5" aria-hidden="true" />
           Real stories, real service
         </span>
         <h2 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
           Voices of Our{" "}
-          <span className="bg-gradient-to-r from-[#0D9488] to-[#F59E0B] bg-clip-text text-transparent">
+          <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
             Volunteers
           </span>
         </h2>
@@ -67,7 +67,7 @@ export default function Testimonials() {
             className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-5 shadow-sm transition-shadow hover:shadow-md sm:p-6"
           >
             <Quote
-              className="size-6 shrink-0 text-teal-500/70"
+              className="size-6 shrink-0 text-primary/70"
               aria-hidden="true"
             />
             <blockquote className="text-sm leading-relaxed text-muted-foreground">
@@ -79,7 +79,7 @@ export default function Testimonials() {
                   src={review.img}
                   alt={`${review.name}, volunteer from ${review.location}`}
                 />
-                <AvatarFallback className="bg-teal-500/15 font-medium text-teal-700 dark:text-teal-400">
+                <AvatarFallback className="bg-primary/15 font-medium text-primary">
                   {getInitials(review.name)}
                 </AvatarFallback>
                 <AvatarBadge aria-hidden="true">
