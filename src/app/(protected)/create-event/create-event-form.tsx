@@ -44,9 +44,29 @@ const URL_PATTERN = /^https?:\/\/\S+$/;
 
 function localDateISO(): string {
   const today = new Date();
+  today.setHours(0, 0, 0, 0);
   const month = String(today.getMonth() + 1).padStart(2, "0");
   const day = String(today.getDate()).padStart(2, "0");
   return `${today.getFullYear()}-${month}-${day}`;
+}
+
+function parseDateOnly(value: string): Date | null {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+  if (!match) return null;
+
+  const [, year, month, day] = match;
+  const selectedDate = new Date(Number(year), Number(month) - 1, Number(day));
+  selectedDate.setHours(0, 0, 0, 0);
+
+  if (
+    selectedDate.getFullYear() !== Number(year) ||
+    selectedDate.getMonth() !== Number(month) - 1 ||
+    selectedDate.getDate() !== Number(day)
+  ) {
+    return null;
+  }
+
+  return selectedDate;
 }
 
 type EventValues = {
@@ -66,11 +86,9 @@ type EventErrors = Partial<Record<EventField, string>>;
 function validate(values: EventValues): EventErrors {
   const errors: EventErrors = {};
   const volunteersNeeded = Number(values.volunteersNeeded);
-  const selectedDate = values.date ? new Date(`${values.date}T00:00:00`) : null;
-  const isValidDate =
-    selectedDate !== null &&
-    !Number.isNaN(selectedDate.getTime()) &&
-    selectedDate.toISOString().slice(0, 10) === values.date;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const selectedDate = parseDateOnly(values.date);
 
   if (values.title.trim().length < 3) {
     errors.title = "Please enter an event title (at least 3 characters).";
@@ -81,7 +99,7 @@ function validate(values: EventValues): EventErrors {
   if (!values.location.trim()) {
     errors.location = "Please enter the event location.";
   }
-  if (!isValidDate || values.date < localDateISO()) {
+  if (!selectedDate || selectedDate < today) {
     errors.date = "Please choose a valid date today or later.";
   }
   if (!Number.isInteger(volunteersNeeded) || volunteersNeeded < 1) {
