@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { ArrowLeft, CalendarDays, MapPin, Users, Mail, TriangleAlert, LoaderCircle } from 'lucide-react';
 
 import { useSession } from '@/lib/auth-client';
+import { useMounted } from '@/lib/use-mounted';
+import { findSeedEvent } from '@/lib/seed-events';
 import { toast } from '@/components/ui/toast';
 
 interface EventDoc {
@@ -36,8 +38,11 @@ export default function EventDetails({ eventId }: { eventId: string }) {
   const [volunteersNeeded, setVolunteersNeeded] = useState(0);
   const [hasJoined, setHasJoined] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const mounted = useMounted();
 
   useEffect(() => {
+    if (!mounted) return;
+
     const controller = new AbortController();
     const run = async () => {
       try {
@@ -62,17 +67,28 @@ export default function EventDetails({ eventId }: { eventId: string }) {
           return;
         }
         console.error('Failed to load event', error);
-        setLoadError(
-          error instanceof Error
-            ? error.message
-            : 'Something went wrong while loading the event.'
-        );
+
+        // Seed cards use dummy IDs (`seed-1` … `seed-5`) that the API cannot
+        // resolve as Mongo documents — render from the shared fallback mock
+        // data instead of showing an error page.
+        const seedMatch = findSeedEvent(eventId);
+        if (seedMatch) {
+          setEvent(seedMatch);
+          setVolunteersNeeded(seedMatch.volunteersNeeded);
+          setHasJoined(Boolean(userEmail && seedMatch.joinedUsers?.includes(userEmail)));
+        } else {
+          setLoadError(
+            error instanceof Error
+              ? error.message
+              : 'Something went wrong while loading the event.'
+          );
+        }
       }
     };
 
     void run();
     return () => controller.abort();
-  }, [eventId, userEmail]);
+  }, [eventId, userEmail, mounted]);
 
   const handleJoin = async () => {
     if (hasJoined || !event) return;

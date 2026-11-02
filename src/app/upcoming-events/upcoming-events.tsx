@@ -3,12 +3,14 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { CalendarDays, MapPin, Search, TriangleAlert, Users } from 'lucide-react';
-import { Button, buttonVariants } from '@/components/ui/button';
+import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { SEED_EVENTS, mergeEventsWithSeeds } from '@/lib/seed-events';
+import { useMounted } from '@/lib/use-mounted';
 
 const EVENTS_API_URL = process.env.NEXT_PUBLIC_API_URL
   ? `${process.env.NEXT_PUBLIC_API_URL}/api/events`
@@ -19,7 +21,7 @@ const CATEGORIES = ['All', 'Tree Plantation', 'Winter Clothes', 'Blood Drive', '
 
 type Category = (typeof CATEGORIES)[number];
 
-/** Event document exactly as the Express/Mongo API returns it. */
+/** Event document structure */
 type EventItem = {
   _id: string;
   title: string;
@@ -28,8 +30,9 @@ type EventItem = {
   location: string;
   date: string;
   volunteersNeeded: number;
-  organizerEmail: string;
+  organizerEmail?: string;
   imageUrl?: string;
+  image?: string;
 };
 
 /** Unified Category Tag styling across Light/Dark modes. */
@@ -78,11 +81,14 @@ export default function UpcomingEvents() {
   const [isLoading, setIsLoading] = React.useState(true);
   const [loadError, setLoadError] = React.useState<string | null>(null);
   const [reloadKey, setReloadKey] = React.useState(0);
+  const mounted = useMounted();
 
   const [search, setSearch] = React.useState('');
   const [category, setCategory] = React.useState<Category>('All');
 
   React.useEffect(() => {
+    if (!mounted) return;
+
     const controller = new AbortController();
     const run = async () => {
       try {
@@ -94,17 +100,21 @@ export default function UpcomingEvents() {
           throw new Error(`The server responded with status ${response.status}.`);
         }
         const data: unknown = await response.json();
-        const list = Array.isArray(data)
+        const apiList = Array.isArray(data)
           ? data
           : Array.isArray((data as { events?: unknown }).events)
             ? (data as { events: EventItem[] }).events
             : [];
-        setEvents(list as EventItem[]);
+
+        // Seeds always render first; backend events merge in without
+        // overwriting them (duplicates removed by title).
+        setEvents(mergeEventsWithSeeds(apiList as EventItem[]));
       } catch (error) {
         if (error instanceof DOMException && error.name === 'AbortError') {
           return;
         }
-        setLoadError(error instanceof Error ? error.message : 'Something went wrong while loading events.');
+        // Fallback to dummy events on network failure
+        setEvents(SEED_EVENTS);
       } finally {
         if (!controller.signal.aborted) {
           setIsLoading(false);
@@ -114,7 +124,7 @@ export default function UpcomingEvents() {
 
     void run();
     return () => controller.abort();
-  }, [reloadKey]);
+  }, [reloadKey, mounted]);
 
   const handleRetry = React.useCallback(() => {
     setIsLoading(true);
@@ -131,6 +141,10 @@ export default function UpcomingEvents() {
       return matchesCategory && matchesQuery;
     });
   }, [events, search, category]);
+
+  if (!mounted) {
+    return null;
+  }
 
   return (
     <main className="mx-auto grid w-full max-w-6xl flex-1 gap-6 px-4 py-10 dark:text-slate-100">
@@ -242,13 +256,17 @@ export default function UpcomingEvents() {
             {filteredEvents.map((event) => {
               const parsedDate = new Date(event.date);
               const formattedDate = isNaN(parsedDate.getTime()) ? event.date : DISPLAY_DATE_FORMAT.format(parsedDate);
+              const eventImg =
+                event.imageUrl ||
+                event.image ||
+                'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?q=80&w=800';
 
               return (
                 <Card
-                  key={event._id}
+                  key={event._id || event.title}
                   className="flex flex-col overflow-hidden border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm"
                 >
-                  <EventImage src={event.imageUrl} title={event.title} />
+                  <EventImage src={eventImg} title={event.title} />
                   <CardHeader className="gap-2 p-5">
                     <CategoryBadge category={event.category} />
                     <CardTitle className="line-clamp-1 text-xl font-bold dark:text-white">{event.title}</CardTitle>

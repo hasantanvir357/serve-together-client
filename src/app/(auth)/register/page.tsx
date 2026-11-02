@@ -1,59 +1,49 @@
-"use client";
+'use client';
 
-import { useRouter } from "next/navigation";
-import Link from "next/link";
-import type { FormEvent } from "react";
-import * as React from "react";
-import { toast } from "@/components/ui/toast";
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { useAuth } from "@/context/AuthContext";
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import type { FormEvent } from 'react';
+import * as React from 'react';
+import { toast } from '@/components/ui/toast';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { useAuth } from '@/context/AuthContext';
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const URL_PATTERN = /^https?:\/\/\S+$/;
-const HAS_UPPERCASE = /.*[A-Z]/;
-const HAS_LOWERCASE = /.*[a-z]/;
+const HAS_UPPERCASE = /[A-Z]/;
+const HAS_LOWERCASE = /[a-z]/;
 
 type RegisterValues = {
-  name: string;
+  firstName: string;
+  lastName: string;
   email: string;
   password: string;
-  imageUrl: string;
+  confirmPassword: string;
 };
 
 type RegisterField = keyof RegisterValues;
-
 type RegisterErrors = Partial<Record<RegisterField, string>>;
 
 function validate(values: RegisterValues): RegisterErrors {
   const errors: RegisterErrors = {};
 
-  if (values.name.trim().length < 2) {
-    errors.name = "Please enter your full name.";
+  if (!values.firstName.trim()) {
+    errors.firstName = 'Please enter your first name.';
+  }
+  if (!values.lastName.trim()) {
+    errors.lastName = 'Please enter your last name.';
   }
   if (!EMAIL_PATTERN.test(values.email)) {
-    errors.email = "Please enter a valid email address.";
+    errors.email = 'Please enter a valid email address.';
   }
-  if (
-    values.password.length < 6 ||
-    !HAS_UPPERCASE.test(values.password) ||
-    !HAS_LOWERCASE.test(values.password)
-  ) {
+  if (values.password.length < 6 || !HAS_UPPERCASE.test(values.password) || !HAS_LOWERCASE.test(values.password)) {
     errors.password =
-      "Password must be at least 6 characters long, contain at least one uppercase and one lowercase letter.";
+      'Password must be at least 6 characters long, contain at least one uppercase and one lowercase letter.';
   }
-  // Image URL is optional, but must look like an absolute http(s) URL.
-  if (values.imageUrl && !URL_PATTERN.test(values.imageUrl)) {
-    errors.imageUrl = "Please enter a valid image URL (http/https).";
+  if (values.password !== values.confirmPassword) {
+    errors.confirmPassword = 'Passwords do not match.';
   }
 
   return errors;
@@ -63,10 +53,11 @@ export default function RegisterPage() {
   const { login } = useAuth();
   const router = useRouter();
   const [values, setValues] = React.useState<RegisterValues>({
-    name: "",
-    email: "",
-    password: "",
-    imageUrl: "",
+    firstName: '',
+    lastName: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
   });
   const [errors, setErrors] = React.useState<RegisterErrors>({});
 
@@ -84,49 +75,64 @@ export default function RegisterPage() {
       return;
     }
 
-    const name = values.name.trim();
-    // No backend yet: persist the signup locally so the navbar picks it up.
+    const fullName = `${values.firstName.trim()} ${values.lastName.trim()}`;
     login({
-      name,
+      name: fullName,
       email: values.email,
-      image: values.imageUrl || undefined,
     });
     toast.add({
-      title: "Account created",
-      description: `Welcome aboard, ${name}!`,
-      type: "success",
+      title: 'Account created',
+      description: `Welcome aboard, ${fullName}!`,
+      type: 'success',
     });
-    router.push("/");
+    router.push('/');
   };
 
   return (
-    <Card className="w-full max-w-sm">
+    <Card className="w-full max-w-md mx-auto">
       <CardHeader>
         <CardTitle>Create an account</CardTitle>
-        <CardDescription>
-          Join ServeTogether to volunteer in your community — it takes a
-          minute.
-        </CardDescription>
+        <CardDescription>Join ServeTogether to volunteer in your community.</CardDescription>
       </CardHeader>
       <CardContent>
         <form noValidate onSubmit={handleSubmit} className="flex flex-col gap-4">
-          <div className="grid gap-2">
-            <Label htmlFor="register-name">Full Name</Label>
-            <Input
-              id="register-name"
-              name="name"
-              placeholder="Jane Doe"
-              autoComplete="name"
-              required
-              value={values.name}
-              aria-invalid={errors.name ? true : undefined}
-              onChange={(event) => handleChange("name")(event.target.value)}
-            />
-            {errors.name ? (
-              <p role="alert" className="text-xs text-destructive">
-                {errors.name}
-              </p>
-            ) : null}
+          {/* First Name & Last Name grid */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="grid gap-2">
+              <Label htmlFor="register-firstname">First Name</Label>
+              <Input
+                id="register-firstname"
+                name="firstName"
+                placeholder="Tanvir"
+                required
+                value={values.firstName}
+                aria-invalid={errors.firstName ? true : undefined}
+                onChange={(e) => handleChange('firstName')(e.target.value)}
+              />
+              {errors.firstName && (
+                <p role="alert" className="text-xs text-destructive">
+                  {errors.firstName}
+                </p>
+              )}
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="register-lastname">Last Name</Label>
+              <Input
+                id="register-lastname"
+                name="lastName"
+                placeholder="Hasan"
+                required
+                value={values.lastName}
+                aria-invalid={errors.lastName ? true : undefined}
+                onChange={(e) => handleChange('lastName')(e.target.value)}
+              />
+              {errors.lastName && (
+                <p role="alert" className="text-xs text-destructive">
+                  {errors.lastName}
+                </p>
+              )}
+            </div>
           </div>
 
           <div className="grid gap-2">
@@ -140,13 +146,13 @@ export default function RegisterPage() {
               required
               value={values.email}
               aria-invalid={errors.email ? true : undefined}
-              onChange={(event) => handleChange("email")(event.target.value)}
+              onChange={(e) => handleChange('email')(e.target.value)}
             />
-            {errors.email ? (
+            {errors.email && (
               <p role="alert" className="text-xs text-destructive">
                 {errors.email}
               </p>
-            ) : null}
+            )}
           </div>
 
           <div className="grid gap-2">
@@ -155,54 +161,49 @@ export default function RegisterPage() {
               id="register-password"
               name="password"
               type="password"
-              placeholder="Min 6 chars, upper & lowercase (e.g. TreeHugger1)"
+              placeholder="Min 6 chars, upper & lowercase (e.g. Serve123)"
               autoComplete="new-password"
               required
               value={values.password}
               aria-invalid={errors.password ? true : undefined}
-              onChange={(event) =>
-                handleChange("password")(event.target.value)
-              }
+              onChange={(e) => handleChange('password')(e.target.value)}
             />
-            {errors.password ? (
-              <p role="alert" className="text-xs text-destructive">
+            {errors.password && (
+              <p role="alert" className="text-xs text-destructive leading-normal">
                 {errors.password}
               </p>
-            ) : null}
+            )}
           </div>
 
           <div className="grid gap-2">
-            <Label htmlFor="register-image-url">Image URL (optional)</Label>
+            <Label htmlFor="register-confirm-password">Confirm Password</Label>
             <Input
-              id="register-image-url"
-              name="imageUrl"
-              type="url"
-              placeholder="https://example.com/avatar.png"
-              value={values.imageUrl}
-              aria-invalid={errors.imageUrl ? true : undefined}
-              onChange={(event) =>
-                handleChange("imageUrl")(event.target.value)
-              }
+              id="register-confirm-password"
+              name="confirmPassword"
+              type="password"
+              placeholder="••••••••"
+              autoComplete="new-password"
+              required
+              value={values.confirmPassword}
+              aria-invalid={errors.confirmPassword ? true : undefined}
+              onChange={(e) => handleChange('confirmPassword')(e.target.value)}
             />
-            {errors.imageUrl ? (
+            {errors.confirmPassword && (
               <p role="alert" className="text-xs text-destructive">
-                {errors.imageUrl}
+                {errors.confirmPassword}
               </p>
-            ) : null}
+            )}
           </div>
 
-          <Button type="submit" className="mt-2 w-full">
+          <Button type="submit" className="mt-2 w-full bg-[#0284c7] hover:bg-sky-700">
             Create Account
           </Button>
         </form>
       </CardContent>
       <CardFooter className="justify-center">
         <p className="text-sm text-muted-foreground">
-          Already have an account?{" "}
-          <Link
-            href="/login"
-            className="font-medium text-primary hover:underline"
-          >
+          Already have an account?{' '}
+          <Link href="/login" className="font-medium text-[#0284c7] hover:underline">
             Login
           </Link>
         </p>

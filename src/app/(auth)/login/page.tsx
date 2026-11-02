@@ -1,44 +1,37 @@
-"use client";
+'use client';
 
-import { useRouter } from "next/navigation";
-import Link from "next/link";
-import type { FormEvent } from "react";
-import * as React from "react";
-import { toast } from "@/components/ui/toast";
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { useAuth } from "@/context/AuthContext";
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import type { FormEvent } from 'react';
+import * as React from 'react';
+import { toast } from '@/components/ui/toast';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { useAuth } from '@/context/AuthContext';
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+// পাসওয়ার্ডের শর্ত: সর্বনিম্ন ৬ ক্যারেক্টার, অন্তত ১টি বড় হাতের (A-Z) ও ১টি ছোট হাতের (a-z) অক্ষর
+const PASSWORD_PATTERN = /^(?=.*[a-z])(?=.*[A-Z]).{6,}$/;
 
 /** Fallback display name until a real backend returns the user profile. */
 function nameFromEmail(email: string): string {
   return email
-    .split("@")[0]
+    .split('@')[0]
     .split(/[._-]+/)
     .filter(Boolean)
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(" ");
+    .join(' ');
 }
 
-type LoginField = "email" | "password";
+type LoginField = 'email' | 'password';
 
 export default function LoginPage() {
   const { login } = useAuth();
   const router = useRouter();
-  const [values, setValues] = React.useState({ email: "", password: "" });
-  const [errors, setErrors] = React.useState<
-    Partial<Record<LoginField, string>>
-  >({});
+  const [values, setValues] = React.useState({ email: '', password: '' });
+  const [errors, setErrors] = React.useState<Partial<Record<LoginField, string>>>({});
 
   const handleChange = (field: LoginField) => (value: string) => {
     setValues((prev) => ({ ...prev, [field]: value }));
@@ -51,11 +44,15 @@ export default function LoginPage() {
 
     const nextErrors: Partial<Record<LoginField, string>> = {};
     if (!EMAIL_PATTERN.test(values.email)) {
-      nextErrors.email = "Please enter a valid email address.";
+      nextErrors.email = 'Please enter a valid email address.';
     }
-    if (values.password.length < 6) {
-      nextErrors.password = "Password must be at least 6 characters.";
+
+    // পাসওয়ার্ড ভ্যালিডেশন চেক
+    if (!PASSWORD_PATTERN.test(values.password)) {
+      nextErrors.password =
+        'Password must be at least 6 characters long, contain at least one uppercase and one lowercase letter.';
     }
+
     if (Object.values(nextErrors).some(Boolean)) {
       setErrors(nextErrors);
       return;
@@ -64,20 +61,18 @@ export default function LoginPage() {
     const name = nameFromEmail(values.email);
     login({ name, email: values.email });
     toast.add({
-      title: "Signed in",
+      title: 'Signed in',
       description: `Welcome back, ${name}!`,
-      type: "success",
+      type: 'success',
     });
-    router.push("/");
+    router.push('/');
   };
 
   return (
     <Card className="w-full max-w-sm">
       <CardHeader>
         <CardTitle>Login</CardTitle>
-        <CardDescription>
-          Sign in to create and manage your volunteering events.
-        </CardDescription>
+        <CardDescription>Sign in to create and manage your volunteering events.</CardDescription>
       </CardHeader>
       <CardContent>
         <form noValidate onSubmit={handleSubmit} className="flex flex-col gap-4">
@@ -92,7 +87,7 @@ export default function LoginPage() {
               required
               value={values.email}
               aria-invalid={errors.email ? true : undefined}
-              onChange={(event) => handleChange("email")(event.target.value)}
+              onChange={(event) => handleChange('email')(event.target.value)}
             />
             {errors.email ? (
               <p role="alert" className="text-xs text-destructive">
@@ -112,12 +107,10 @@ export default function LoginPage() {
               required
               value={values.password}
               aria-invalid={errors.password ? true : undefined}
-              onChange={(event) =>
-                handleChange("password")(event.target.value)
-              }
+              onChange={(event) => handleChange('password')(event.target.value)}
             />
             {errors.password ? (
-              <p role="alert" className="text-xs text-destructive">
+              <p role="alert" className="text-xs text-destructive leading-normal">
                 {errors.password}
               </p>
             ) : null}
@@ -130,11 +123,8 @@ export default function LoginPage() {
       </CardContent>
       <CardFooter className="justify-center">
         <p className="text-sm text-muted-foreground">
-          Don&apos;t have an account?{" "}
-          <Link
-            href="/register"
-            className="font-medium text-primary hover:underline"
-          >
+          Don&apos;t have an account?{' '}
+          <Link href="/register" className="font-medium text-primary hover:underline">
             Register
           </Link>
         </p>

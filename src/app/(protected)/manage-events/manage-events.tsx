@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Trash2, Plus, LoaderCircle } from 'lucide-react';
 import { useSession } from '@/lib/auth-client';
+import { useMounted } from '@/lib/use-mounted';
 import { toast } from '@/components/ui/toast';
 
 interface EventItem {
@@ -22,10 +23,13 @@ export default function ManageEvents() {
   const [events, setEvents] = useState<EventItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const mounted = useMounted();
 
   const email = session?.user?.email ?? '';
 
   useEffect(() => {
+    if (!mounted) return;
+
     const controller = new AbortController();
     const run = async () => {
       try {
@@ -54,7 +58,7 @@ export default function ManageEvents() {
 
     void run();
     return () => controller.abort();
-  }, [email]);
+  }, [email, mounted]);
 
   const confirmDelete = async () => {
     if (!deleteId) return;
