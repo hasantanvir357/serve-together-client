@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/toast';
 import { LoaderCircle, User } from 'lucide-react';
+import { authClient } from '@/lib/auth-client'; // আপনার Better Auth ক্লায়েন্ট
 
 export default function ProfilePage() {
   const { user } = useAuth();
@@ -30,11 +31,10 @@ export default function ProfilePage() {
     }
 
     setIsSubmitting(true);
-
-    // লোকাল ও লাইভ উভয়ের জন্য ব্যাকএন্ড পাথ
     const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://serve-together-server-ten.vercel.app';
 
     try {
+      // ১. ব্যাকএন্ড ডাটাবেসে আপডেট পাঠানো
       const response = await fetch(`${API_BASE}/api/auth/profile`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -50,16 +50,32 @@ export default function ProfilePage() {
         throw new Error(errorData.message || 'Failed to update profile');
       }
 
+      // ২. Better Auth-এর ইন্টারনাল ইউজার আপডেট (যদি ক্লায়েন্ট সাপোর্ট করে)
+      try {
+        if (authClient?.updateUser) {
+          await authClient.updateUser({
+            name: name.trim(),
+            image: image.trim(),
+          });
+        }
+      } catch (authErr) {
+        console.warn('Better-auth client sync skipped', authErr);
+      }
+
       toast.add({
         title: 'Profile Updated',
         description: 'Your name and photo have been updated successfully.',
         type: 'success',
       });
 
-      // লোকাল স্টোরেজ ও সেশন রিফ্রেশ করার জন্য
+      // ৩. স্টেট সরাসরি আপডেট রাখা
+      setName(name.trim());
+      setImage(image.trim());
+
+      // ৪. সম্পূর্ণ সেশন রিফ্রেশ করে হোম অথবা ড্যাশবোর্ডে সিঙ্ক করা
       setTimeout(() => {
         window.location.reload();
-      }, 1000);
+      }, 800);
     } catch (error) {
       toast.add({
         title: 'Update failed',
@@ -82,7 +98,6 @@ export default function ProfilePage() {
                 alt="Profile Preview"
                 className="size-full object-cover"
                 onError={(e) => {
-                  // ছবি লোড না হলে ফলব্যাক দেখাবে
                   (e.target as HTMLElement).style.display = 'none';
                 }}
               />
@@ -118,10 +133,10 @@ export default function ProfilePage() {
                 type="url"
                 value={image}
                 onChange={(e) => setImage(e.target.value)}
-                placeholder="https://images.unsplash.com/photo-..."
+                placeholder="https://images.unsplash.com/..."
               />
               <p className="text-xs text-muted-foreground">
-                যেকোনো বৈধ ছবির সরাসরি লিংক দিন (যেমন Unsplash বা অন্য কোনো ইমেজ লিংক)।
+                ছবির সরাসরি লিংক দিন (যেমন Clash of Clans বা Unsplash-এর ছবি)।
               </p>
             </div>
 
