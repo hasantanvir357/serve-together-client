@@ -138,7 +138,9 @@ export default function CreateEventForm() {
           volunteersNeeded: Number(values.volunteersNeeded),
           imageUrl: values.imageUrl,
           organizerEmail: user?.email ?? "",
+          creatorEmail: user?.email ?? "",
         }),
+        credentials: "include",
       });
 
       if (!response.ok) {
@@ -162,7 +164,7 @@ export default function CreateEventForm() {
         description: `“${values.title.trim()}” is live and ready to recruit volunteers.`,
         type: "success",
       });
-      router.push("/manage-events");
+      router.push("/upcoming-events");
     } catch (error) {
       toast.add({
         title: "Could not create event",

@@ -4,15 +4,15 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { CalendarDays, MapPin, LoaderCircle, LogOut } from 'lucide-react';
-import { useSession } from '@/lib/auth-client';
-import { useMounted } from '@/lib/use-mounted';
-import { SEED_EVENTS, mergeEventsWithSeeds } from '@/lib/seed-events';
-import { toast } from '@/components/ui/toast';
+import { useAuth } from '../../context/AuthContext';
+import { useSession } from '../../lib/auth-client';
+import { useMounted } from '../../lib/use-mounted';
+import { toast } from '../../components/ui/toast';
 
 interface EventItem {
   _id: string;
   title: string;
-  description: string;
+  description?: string;
   category: string;
   image?: string;
   imageUrl?: string;
@@ -20,50 +20,51 @@ interface EventItem {
   date: string;
   volunteersNeeded: number;
   joinedUsers?: string[];
+  volunteers?: string[];
 }
 
 const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1559027615-cd4628902d4a?q=80&w=600';
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
 export default function JoinedEventsPage() {
-  const { data: session } = useSession() || {};
+  const { user: authUser } = useAuth() || {};
+  const { data: session, isPending: isSessionPending } = useSession() || {};
   const [events, setEvents] = useState<EventItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [leavingId, setLeavingId] = useState<string | null>(null);
   const mounted = useMounted();
 
-  const email = session?.user?.email ?? '';
+  // Extract email reliably from either AuthContext or Session
+  const userEmail = (authUser?.email || session?.user?.email || '').trim().toLowerCase();
 
   useEffect(() => {
     if (!mounted) return;
+    if (isSessionPending && !authUser) return;
+
+    if (!userEmail) {
+      setIsLoading(false);
+      return;
+    }
 
     const controller = new AbortController();
     const run = async () => {
       try {
-        const res = await fetch(`${API_BASE_URL}/api/events/joined?email=${encodeURIComponent(email)}`, {
+        setIsLoading(true);
+        const res = await fetch(`${API_BASE_URL}/api/events/joined?userEmail=${encodeURIComponent(userEmail)}`, {
           signal: controller.signal,
+          credentials: 'include',
         });
+
         if (res.ok) {
-          const data = (await res.json()) as EventItem[];
-          const apiList = Array.isArray(data) ? data : [];
-          // `GET /joined` also returns the user's joined `seed-N` events
-          // (tracked in the server's in-memory seedJoinStore). Match those
-          // against the local seed data and merge, so joined seed cards
-          // render immediately and reliably.
-          const cleanEmail = email.trim().toLowerCase();
-          const joinedSeeds = SEED_EVENTS.filter((seed) =>
-            apiList.some(
-              (ev) =>
-                ev._id === seed._id &&
-                Array.isArray(ev.joinedUsers) &&
-                ev.joinedUsers.includes(cleanEmail),
-            ),
-          );
-          setEvents(mergeEventsWithSeeds(apiList, joinedSeeds));
+          const data = await res.json();
+          // Directly set the returned joined events array from API
+          setEvents(Array.isArray(data) ? data : []);
+        } else {
+          setEvents([]);
         }
-      } catch (err) {
-        if ((err as Error).name !== 'AbortError') {
-          console.error('Failed to load joined events');
+      } catch (err: any) {
+        if (err.name !== 'AbortError') {
+          console.error('Failed to load joined events:', err);
         }
       } finally {
         if (!controller.signal.aborted) {
@@ -74,11 +75,11 @@ export default function JoinedEventsPage() {
 
     void run();
     return () => controller.abort();
-  }, [email, mounted]);
+  }, [userEmail, isSessionPending, authUser, mounted]);
 
   // Handle Leave Event Logic
   const handleLeaveEvent = async (eventId: string) => {
-    if (!email) return;
+    if (!userEmail) return;
 
     setLeavingId(eventId);
     try {
@@ -87,10 +88,12 @@ export default function JoinedEventsPage() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email }),
+        credentials: 'include',
+        body: JSON.stringify({ userEmail }),
       });
 
       if (res.ok) {
+        // Optimistically remove the event from UI
         setEvents((prev) => prev.filter((ev) => ev._id !== eventId));
         if (toast?.add) {
           toast.add({
@@ -124,6 +127,9 @@ export default function JoinedEventsPage() {
     );
   }
 
+  // Render joined event cards sorted by date (soonest first)
+  const sortedEvents = [...events].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
   return (
     <div className="container mx-auto px-4 py-8 dark:text-slate-100">
       <h1 className="text-2xl font-bold text-slate-800 dark:text-white mb-2">Joined Events</h1>
@@ -136,14 +142,14 @@ export default function JoinedEventsPage() {
           <p className="text-slate-600 dark:text-slate-400 mb-4">You haven&apos;t joined any volunteer events yet.</p>
           <Link
             href="/upcoming-events"
-            className="inline-block bg-[#0284c7] hover:bg-sky-700 text-white font-medium px-6 py-2.5 rounded-lg transition"
+            className="inline-block bg-[#0284c7] hover:bg-sky-700 text-white font-medium px-6 py-2.5 rounded-lg transition cursor-pointer"
           >
             Browse Upcoming Events
           </Link>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {events.map((event) => {
+          {sortedEvents.map((event) => {
             const eventImg = event.imageUrl || event.image || FALLBACK_IMAGE;
             const parsedDate = new Date(event.date);
             const formattedDate = isNaN(parsedDate.getTime())
@@ -186,15 +192,16 @@ export default function JoinedEventsPage() {
                 <div className="p-5 pt-0 flex gap-2">
                   <Link
                     href={`/events/${event._id}`}
-                    className="flex-1 text-center bg-[#0284c7] hover:bg-sky-700 text-white font-medium py-2 rounded-lg transition text-sm"
+                    className="flex-1 text-center bg-[#0284c7] hover:bg-sky-700 text-white font-medium py-2 rounded-lg transition text-sm cursor-pointer"
                   >
                     View Details
                   </Link>
 
                   <button
+                    type="button"
                     onClick={() => handleLeaveEvent(event._id)}
                     disabled={isLeavingThis}
-                    className="flex items-center justify-center gap-1.5 px-3 py-2 bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-900/60 border border-rose-200 dark:border-rose-800/50 rounded-lg text-sm font-medium transition disabled:opacity-50"
+                    className="flex items-center justify-center gap-1.5 px-3 py-2 bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-900/60 border border-rose-200 dark:border-rose-800/50 rounded-lg text-sm font-medium transition disabled:opacity-50 cursor-pointer"
                     title="Leave Event"
                   >
                     {isLeavingThis ? (

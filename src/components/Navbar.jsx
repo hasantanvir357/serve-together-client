@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
 import { Dialog as DialogPrimitive } from "@base-ui/react/dialog";
 import {
@@ -19,26 +19,24 @@ import {
   X,
 } from "lucide-react";
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
+import { Button, buttonVariants } from "./ui/button";
 import {
   Dialog,
   DialogOverlay,
   DialogPortal,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
+} from "./ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { useAuth } from "@/context/AuthContext";
-import { cn } from "@/lib/utils";
+} from "./ui/dropdown-menu";
+import { useAuth } from "../context/AuthContext";
+import { cn } from "../lib/utils";
 
 const HOME_LINKS = [{ label: "Upcoming Events", href: "/upcoming-events" }];
 
@@ -50,7 +48,6 @@ const ACCOUNT_LINKS = [
 
 const MOBILE_LINK_CLASSES =
   "rounded-md px-2 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground";
-
 
 const subscribeNoop = () => () => { };
 const getClientSnapshot = () => true;
@@ -92,7 +89,6 @@ function ThemeToggle({ className, showLabel = false }) {
     getServerSnapshot,
   );
 
-
   const isDark = mounted && resolvedTheme === "dark";
 
   return (
@@ -108,7 +104,7 @@ function ThemeToggle({ className, showLabel = false }) {
       aria-label="Toggle color theme"
       onClick={() => setTheme(isDark ? "light" : "dark")}
     >
-      {isDark ? <Sun aria-hidden="true" /> : <Moon aria-hidden="true" />}
+      {isDark ? <Sun className="size-4" aria-hidden="true" /> : <Moon className="size-4" aria-hidden="true" />}
       {showLabel && <span>Switch theme</span>}
     </Button>
   );
@@ -120,9 +116,9 @@ function AccountAvatar({ size = "default" }) {
   return (
     <Avatar size={size}>
       {user?.image ? (
-        <AvatarImage src={user.image} alt={user.name} />
+        <AvatarImage src={user.image} alt={user.name || "User"} />
       ) : null}
-      <AvatarFallback className="bg-primary/15 font-medium text-primary!">
+      <AvatarFallback className="bg-primary/15 font-medium text-primary">
         {getInitials(user?.name)}
       </AvatarFallback>
     </Avatar>
@@ -131,65 +127,81 @@ function AccountAvatar({ size = "default" }) {
 
 function UserMenu() {
   const { user, logout } = useAuth();
+  const router = useRouter();
+  const mounted = React.useSyncExternalStore(
+    subscribeNoop,
+    getClientSnapshot,
+    getServerSnapshot,
+  );
+
+  if (!mounted) {
+    return <div className="h-8 w-20 animate-pulse rounded-md bg-muted" />;
+  }
+
+  if (!user) {
+    return (
+      <div className="flex items-center gap-1">
+        <Link
+          href="/login"
+          className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "gap-1.5")}
+        >
+          <LogIn className="size-4" aria-hidden="true" />
+          Login
+        </Link>
+        <Link
+          href="/register"
+          className={cn(
+            buttonVariants({ size: "sm" }),
+            "gap-1.5 bg-[#0284c7] hover:bg-sky-700 text-white",
+          )}
+        >
+          <UserPlus className="size-4" aria-hidden="true" />
+          Register
+        </Link>
+      </div>
+    );
+  }
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger
-        render={
-          <Button
-            variant="ghost"
-            size="icon"
-            className="rounded-full"
-            aria-label="Open account menu"
-          />
-        }
-      >
-        <AccountAvatar />
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-60">
-        {/* DropdownMenuLabel is Menu.GroupLabel and must live inside a Group
-            or Base UI throws "MenuGroupContext is missing" on open. */}
-        <DropdownMenuGroup>
-          <DropdownMenuLabel>
-            <span className="block text-sm font-medium text-foreground">
-              {user ? user.name : "Welcome"}
-            </span>
-            <span className="block text-xs text-muted-foreground">
-              {user ? user.email : "Sign in to sync your events"}
-            </span>
-          </DropdownMenuLabel>
-          {user &&
-            ACCOUNT_LINKS.map(({ label, href, icon: Icon }) => (
-              <DropdownMenuItem key={href} render={<Link href={href} />}>
-                <Icon aria-hidden="true" />
-                {label}
+    <div className="flex items-center gap-2">
+      <DropdownMenu>
+        <DropdownMenuTrigger
+          className="rounded-full cursor-pointer outline-none ring-offset-background transition-opacity hover:opacity-80 focus:ring-2 focus:ring-ring focus:ring-offset-2 inline-flex items-center justify-center"
+          aria-label="Open account menu"
+          title={user.name || user.email}
+        >
+          <AccountAvatar />
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-52">
+          <DropdownMenuGroup>
+            {ACCOUNT_LINKS.map(({ label, href, icon: Icon }) => (
+              <DropdownMenuItem
+                key={href}
+                className="cursor-pointer gap-2.5 py-2 text-sm"
+                onClick={() => router.push(href)}
+              >
+                <Icon className="size-4 text-muted-foreground" aria-hidden="true" />
+                <span>{label}</span>
               </DropdownMenuItem>
             ))}
-        </DropdownMenuGroup>
-        <DropdownMenuSeparator />
-        {user ? (
-          <DropdownMenuItem variant="destructive" onClick={logout}>
-            <LogOut aria-hidden="true" />
-            Logout
-          </DropdownMenuItem>
-        ) : (
-          <>
-            <DropdownMenuItem render={<Link href="/login" />}>
-              <LogIn aria-hidden="true" />
-              Login
-            </DropdownMenuItem>
-            <DropdownMenuItem render={<Link href="/register" />}>
-              <UserPlus aria-hidden="true" />
-              Register
-            </DropdownMenuItem>
-          </>
-        )}
-      </DropdownMenuContent>
-    </DropdownMenu>
+          </DropdownMenuGroup>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={logout}
+        aria-label="Logout"
+        className="gap-1.5 text-muted-foreground hover:text-destructive cursor-pointer"
+      >
+        <LogOut className="size-4" aria-hidden="true" />
+        Logout
+      </Button>
+    </div>
   );
 }
 
-/** Mobile: hamburger opening a right-hand drawer built from Base UI Dialog. */
 function MobileMenu() {
   const { user, logout } = useAuth();
   const [open, setOpen] = React.useState(false);
@@ -201,16 +213,10 @@ function MobileMenu() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger
-        render={
-          <Button
-            variant="ghost"
-            size="icon"
-            className="md:hidden"
-            aria-label="Open navigation menu"
-          />
-        }
+        className="inline-flex size-9 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground md:hidden cursor-pointer outline-none"
+        aria-label="Open navigation menu"
       >
-        <Menu aria-hidden="true" />
+        <Menu className="size-5" aria-hidden="true" />
       </DialogTrigger>
       <DialogPortal>
         <DialogOverlay />
@@ -219,14 +225,14 @@ function MobileMenu() {
 
           <div className="flex items-center justify-between gap-2">
             <Logo onClick={close} />
-            <Button
-              variant="ghost"
-              size="icon"
+            <button
+              type="button"
               aria-label="Close navigation menu"
               onClick={close}
+              className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer"
             >
-              <X aria-hidden="true" />
-            </Button>
+              <X className="size-5" aria-hidden="true" />
+            </button>
           </div>
 
           <nav aria-label="Mobile" className="flex flex-col gap-1">
@@ -239,12 +245,11 @@ function MobileMenu() {
                   onClick={close}
                   className={cn(
                     MOBILE_LINK_CLASSES,
-                    active &&
-                    "bg-primary/10 text-primary",
+                    active && "bg-primary/10 text-primary font-semibold",
                   )}
                 >
                   <span className="flex items-center gap-2">
-                    {Icon ? <Icon aria-hidden="true" /> : null}
+                    {Icon ? <Icon className="size-4" aria-hidden="true" /> : null}
                     {label}
                   </span>
                 </Link>
@@ -256,7 +261,7 @@ function MobileMenu() {
             <ThemeToggle showLabel />
             {user ? (
               <>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2" title={user.name || user.email}>
                   <AccountAvatar />
                   <div className="min-w-0">
                     <p className="truncate text-sm font-medium">{user.name}</p>
@@ -267,24 +272,33 @@ function MobileMenu() {
                 </div>
                 <Button
                   variant="outline"
-                  className="w-full"
+                  className="w-full cursor-pointer"
                   onClick={() => {
                     logout();
                     close();
                   }}
                 >
-                  <LogOut aria-hidden="true" />
+                  <LogOut className="size-4 mr-2" aria-hidden="true" />
                   Logout
                 </Button>
               </>
             ) : (
-              <Link
-                href="/login"
-                onClick={close}
-                className={cn(buttonVariants(), "w-full")}
-              >
-                Login
-              </Link>
+              <>
+                <Link
+                  href="/login"
+                  onClick={close}
+                  className={cn(buttonVariants(), "w-full text-center")}
+                >
+                  Login
+                </Link>
+                <Link
+                  href="/register"
+                  onClick={close}
+                  className={cn(buttonVariants({ variant: "outline" }), "w-full text-center")}
+                >
+                  Register
+                </Link>
+              </>
             )}
           </div>
         </DialogPrimitive.Popup>
@@ -299,10 +313,8 @@ export default function Navbar() {
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border bg-background/80 backdrop-blur supports-backdrop-filter:bg-background/70">
       <div className="mx-auto flex h-14 w-full max-w-6xl items-center justify-between gap-3 px-4">
-        {/* Left: logo */}
         <Logo />
 
-        {/* Center: upcoming events (desktop) */}
         <nav aria-label="Primary" className="hidden flex-1 justify-center md:flex">
           {HOME_LINKS.map(({ label, href }) => {
             const active = pathname === href;
@@ -323,8 +335,7 @@ export default function Navbar() {
           })}
         </nav>
 
-        {/* Right: theme toggle + auth */}
-        <div className="flex shrink-0 items-center gap-1">
+        <div className="flex shrink-0 items-center gap-2">
           <ThemeToggle />
           <div className="hidden md:block">
             <UserMenu />

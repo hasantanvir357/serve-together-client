@@ -1,13 +1,15 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, CalendarDays, MapPin, Users, Mail, TriangleAlert, LoaderCircle } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { ArrowLeft, CalendarDays, MapPin, Users, Mail, TriangleAlert, LoaderCircle, LogIn } from 'lucide-react';
 
-import { useSession } from '@/lib/auth-client';
-import { useMounted } from '@/lib/use-mounted';
-import { findSeedEvent } from '@/lib/seed-events';
-import { toast } from '@/components/ui/toast';
+import { useSession } from '../../../lib/auth-client';
+import { useAuth } from '../../../context/AuthContext';
+import { useMounted } from '../../../lib/use-mounted';
+import { findSeedEvent } from '../../../lib/seed-events';
+import { toast } from '../../../components/ui/toast';
 
 interface EventDoc {
   _id: string;
@@ -22,23 +24,36 @@ interface EventDoc {
   organizerEmail?: string;
   creatorEmail?: string;
   joinedUsers?: string[];
+  volunteers?: string[];
 }
 
-const FALLBACK_IMAGE =
-  'https://images.unsplash.com/photo-1559027615-cd4628902d4a?q=80&w=800&auto=format&fit=crop';
+const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1559027615-cd4628902d4a?q=80&w=800&auto=format&fit=crop';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
 export default function EventDetails({ eventId }: { eventId: string }) {
+  const router = useRouter();
   const { data: session } = useSession() || {};
-  const userEmail = session?.user?.email ?? '';
+  const { user: authUser } = useAuth();
 
   const [event, setEvent] = useState<EventDoc | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [volunteers, setVolunteers] = useState<string[]>([]);
   const [volunteersNeeded, setVolunteersNeeded] = useState(0);
-  const [hasJoined, setHasJoined] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const mounted = useMounted();
+
+  // Single source of truth: BetterAuth session (Google OAuth / email-password)
+  // first, then the AuthContext user (local login).
+  const userEmail = useMemo(
+    () =>
+      (session?.user?.email || authUser?.email || '').trim().toLowerCase(),
+    [session?.user?.email, authUser?.email],
+  );
+
+  const hasJoined = Boolean(
+    userEmail && volunteers.some((email) => email.trim().toLowerCase() === userEmail),
+  );
 
   useEffect(() => {
     if (!mounted) return;
@@ -46,10 +61,10 @@ export default function EventDetails({ eventId }: { eventId: string }) {
     const controller = new AbortController();
     const run = async () => {
       try {
-        const res = await fetch(
-          `${API_BASE_URL}/api/events/${eventId}`,
-          { signal: controller.signal, cache: 'no-store' }
-        );
+        const res = await fetch(`${API_BASE_URL}/api/events/${eventId}`, {
+          signal: controller.signal,
+          cache: 'no-store',
+        });
         if (!res.ok) {
           throw new Error(`The server responded with status ${res.status}.`);
         }
@@ -58,69 +73,91 @@ export default function EventDetails({ eventId }: { eventId: string }) {
           parsed && typeof parsed === 'object' && 'event' in parsed
             ? (parsed as { event: EventDoc }).event
             : (parsed as EventDoc);
-            
+
         setEvent(data);
         setVolunteersNeeded(data?.volunteersNeeded ?? 0);
-        setHasJoined(Boolean(userEmail && data?.joinedUsers?.includes(userEmail)));
+        setVolunteers(data?.volunteers ?? data?.joinedUsers ?? []);
       } catch (error) {
         if (error instanceof DOMException && error.name === 'AbortError') {
           return;
         }
         console.error('Failed to load event', error);
 
-        // Seed cards use dummy IDs (`seed-1` … `seed-5`) that the API cannot
-        // resolve as Mongo documents — render from the shared fallback mock
-        // data instead of showing an error page.
         const seedMatch = findSeedEvent(eventId);
         if (seedMatch) {
           setEvent(seedMatch);
           setVolunteersNeeded(seedMatch.volunteersNeeded);
-          setHasJoined(Boolean(userEmail && seedMatch.joinedUsers?.includes(userEmail)));
+          setVolunteers(seedMatch.joinedUsers ?? []);
         } else {
-          setLoadError(
-            error instanceof Error
-              ? error.message
-              : 'Something went wrong while loading the event.'
-          );
+          setLoadError(error instanceof Error ? error.message : 'Something went wrong while loading the event.');
         }
       }
     };
 
     void run();
     return () => controller.abort();
-  }, [eventId, userEmail, mounted]);
+  }, [eventId, mounted]);
 
-  const handleJoin = async () => {
-    if (hasJoined || !event) return;
+  const requireLogin = (): boolean => {
+    if (userEmail) return true;
+    toast.add({
+      title: 'Please login to join',
+      description: 'You need to be signed in to join or leave this event.',
+      type: 'warning',
+    });
+    router.push('/login');
+    return false;
+  };
 
+  const handleToggleVolunteer = async () => {
+    if (!requireLogin() || !event || isSubmitting) return;
+
+    const joining = !hasJoined;
     setIsSubmitting(true);
+
+    const token = localStorage.getItem('token') || '';
+
     try {
-      const res = await fetch(`${API_BASE_URL}/api/events/${event._id}/join`, {
+      const res = await fetch(`${API_BASE_URL}/api/events/${eventId}/${joining ? 'join' : 'leave'}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ email: userEmail }),
+        body: JSON.stringify({ userEmail, email: userEmail }),
       });
 
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
 
       if (res.ok) {
-        setHasJoined(true);
-        setVolunteersNeeded((prev) => Math.max(0, prev - 1));
-        if (toast?.add) {
-          toast.add({ title: 'Success!', description: 'Successfully joined as a volunteer!', type: 'success' });
-        }
+        setVolunteers((prev) =>
+          joining
+            ? [...prev.filter((email) => email.trim().toLowerCase() !== userEmail), userEmail]
+            : prev.filter((email) => email.trim().toLowerCase() !== userEmail),
+        );
+        setVolunteersNeeded((prev) => Math.max(0, prev + (joining ? -1 : 1)));
+        toast.add({
+          title: joining ? 'Joined!' : 'Left Event',
+          description: joining
+            ? 'Successfully joined as a volunteer!'
+            : 'You have successfully left the event.',
+          type: 'success',
+        });
       } else {
-        if (toast?.add) {
-          toast.add({ title: 'Error', description: data.message || 'Failed to join event', type: 'error' });
-        }
+        toast.add({
+          title: 'Error',
+          description:
+            data.message || data.error || (joining ? 'Failed to join event' : 'Failed to leave event'),
+          type: 'error',
+        });
       }
     } catch (error) {
-      console.error('Error joining event:', error);
-      if (toast?.add) {
-        toast.add({ title: 'Error', description: 'An error occurred while joining.', type: 'error' });
-      }
+      console.error('Error updating volunteer status:', error);
+      toast.add({
+        title: 'Error',
+        description: joining ? 'An error occurred while joining.' : 'An error occurred while leaving.',
+        type: 'error',
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -226,15 +263,21 @@ export default function EventDetails({ eventId }: { eventId: string }) {
           </div>
 
           <button
-            onClick={handleJoin}
-            disabled={hasJoined || volunteersNeeded <= 0 || isSubmitting || !userEmail}
+            onClick={handleToggleVolunteer}
+            disabled={isSubmitting || (!hasJoined && volunteersNeeded <= 0)}
             className={`w-full py-2.5 px-4 rounded-lg font-medium text-sm transition ${
               hasJoined
-                ? 'bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 cursor-not-allowed'
+                ? 'bg-rose-600 hover:bg-rose-700 text-white'
                 : 'bg-[#0284c7] hover:bg-sky-700 text-white'
             }`}
           >
-            {isSubmitting ? 'Joining...' : hasJoined ? "You've Joined" : 'Join as Volunteer'}
+            {isSubmitting
+              ? hasJoined
+                ? 'Leaving...'
+                : 'Joining...'
+              : hasJoined
+                ? 'Leave Event'
+                : 'Join as Volunteer'}
           </button>
 
           {hasJoined && (
@@ -242,10 +285,17 @@ export default function EventDetails({ eventId }: { eventId: string }) {
               Your spot is confirmed! Check your Joined Events page.
             </p>
           )}
+
           {!userEmail && (
-            <p className="text-xs text-amber-600 dark:text-amber-400 text-center font-medium">
-              Sign in to join this event.
-            </p>
+            <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
+              <Link
+                href="/login"
+                className="flex items-center justify-center gap-2 w-full text-xs font-semibold text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 py-1.5 transition"
+              >
+                <LogIn className="w-3.5 h-3.5" />
+                Sign in to join this event
+              </Link>
+            </div>
           )}
         </div>
       </div>

@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Trash2, Plus, LoaderCircle } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
 import { useSession } from '@/lib/auth-client';
 import { useMounted } from '@/lib/use-mounted';
 import { toast } from '@/components/ui/toast';
@@ -19,13 +20,15 @@ interface EventItem {
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
 export default function ManageEvents() {
+  const { user: authUser } = useAuth() || {};
   const { data: session } = useSession() || {};
   const [events, setEvents] = useState<EventItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const mounted = useMounted();
 
-  const email = session?.user?.email ?? '';
+  // Unified email extraction
+  const email = (authUser?.email || session?.user?.email || '').trim().toLowerCase();
 
   useEffect(() => {
     if (!mounted) return;
@@ -33,22 +36,35 @@ export default function ManageEvents() {
     const controller = new AbortController();
     const run = async () => {
       try {
-        const res = await fetch(`${API_BASE_URL}/api/events/my-events?email=${encodeURIComponent(email)}`, {
+        setIsLoading(true);
+        // If email is available, fetch user specific events; otherwise fallback to all events
+        const fetchUrl = email
+          ? `${API_BASE_URL}/api/events/my-events?email=${encodeURIComponent(email)}`
+          : `${API_BASE_URL}/api/events`;
+
+        const res = await fetch(fetchUrl, {
           signal: controller.signal,
+          credentials: 'include',
         });
+
         if (res.ok) {
-          const data = (await res.json()) as EventItem[];
-          setEvents(Array.isArray(data) ? data : []);
+          const data = await res.json();
+          setEvents(Array.isArray(data) ? data : data.events || []);
         } else {
-          // Fallback: load all events if my-events is empty or unauthenticated
-          const fallbackRes = await fetch(`${API_BASE_URL}/api/events`, { signal: controller.signal });
+          // Secondary fallback
+          const fallbackRes = await fetch(`${API_BASE_URL}/api/events`, {
+            signal: controller.signal,
+            credentials: 'include',
+          });
           if (fallbackRes.ok) {
             const fallbackData = await fallbackRes.json();
             setEvents(Array.isArray(fallbackData) ? fallbackData : fallbackData.events || []);
           }
         }
-      } catch {
-        console.error('Failed to load user events');
+      } catch (err: any) {
+        if (err.name !== 'AbortError') {
+          console.error('Failed to load user events:', err);
+        }
       } finally {
         if (!controller.signal.aborted) {
           setIsLoading(false);
@@ -66,7 +82,11 @@ export default function ManageEvents() {
     try {
       const res = await fetch(`${API_BASE_URL}/api/events/${deleteId}`, {
         method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userEmail: email }),
+        credentials: 'include',
       });
+
       if (res.ok) {
         setEvents((prev) => prev.filter((ev) => ev._id !== deleteId));
         if (toast?.add) {
@@ -108,7 +128,7 @@ export default function ManageEvents() {
         </div>
         <Link
           href="/create-event"
-          className="flex items-center gap-2 bg-[#0284c7] hover:bg-sky-700 text-white font-medium px-4 py-2 rounded-lg text-sm transition"
+          className="flex items-center gap-2 bg-[#0284c7] hover:bg-sky-700 text-white font-medium px-4 py-2 rounded-lg text-sm transition cursor-pointer"
         >
           <Plus className="w-4 h-4" /> Create Event
         </Link>
@@ -117,6 +137,12 @@ export default function ManageEvents() {
       {events.length === 0 ? (
         <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-8 text-center">
           <p className="text-slate-600 dark:text-slate-400 mb-4">You haven&apos;t created any events yet.</p>
+          <Link
+            href="/create-event"
+            className="inline-flex items-center gap-2 bg-[#0284c7] hover:bg-sky-700 text-white font-medium px-4 py-2 rounded-lg text-sm transition cursor-pointer"
+          >
+            <Plus className="w-4 h-4" /> Create One Now
+          </Link>
         </div>
       ) : (
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-sm">
@@ -136,7 +162,6 @@ export default function ManageEvents() {
                   <tr key={event._id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition">
                     <td className="p-4 font-medium text-slate-800 dark:text-slate-100">{event.title}</td>
                     <td className="p-4">
-                      {/* Unified Light Blue Tag System for all categories */}
                       <span className="bg-sky-100 dark:bg-sky-950/60 text-[#0284c7] dark:text-sky-300 border border-sky-200 dark:border-sky-800/50 text-xs font-semibold px-2.5 py-1 rounded-md">
                         {event.category}
                       </span>
@@ -153,8 +178,9 @@ export default function ManageEvents() {
                     </td>
                     <td className="p-4 text-right space-x-2">
                       <button
+                        type="button"
                         onClick={() => setDeleteId(event._id)}
-                        className="p-1.5 bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/60 rounded-lg transition"
+                        className="p-1.5 bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/60 rounded-lg transition cursor-pointer"
                         title="Delete Event"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -168,7 +194,7 @@ export default function ManageEvents() {
         </div>
       )}
 
-      {/* Modern Custom Delete Modal Dialog */}
+      {/* Delete Confirmation Modal */}
       {deleteId && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
           <div className="w-full max-w-sm rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 shadow-2xl dark:text-slate-100">
@@ -178,14 +204,16 @@ export default function ManageEvents() {
             </p>
             <div className="mt-6 flex justify-end gap-3">
               <button
+                type="button"
                 onClick={() => setDeleteId(null)}
-                className="rounded-lg border border-slate-300 dark:border-slate-700 px-4 py-2 text-sm font-medium hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+                className="rounded-lg border border-slate-300 dark:border-slate-700 px-4 py-2 text-sm font-medium hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
               >
                 Cancel
               </button>
               <button
+                type="button"
                 onClick={confirmDelete}
-                className="rounded-lg bg-red-600 hover:bg-red-700 px-4 py-2 text-sm font-medium text-white transition"
+                className="rounded-lg bg-red-600 hover:bg-red-700 px-4 py-2 text-sm font-medium text-white transition cursor-pointer"
               >
                 Delete
               </button>

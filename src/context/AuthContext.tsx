@@ -1,147 +1,123 @@
-"use client";
+'use client';
 
-import * as React from "react";
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import { authClient } from '../lib/auth-client';
 
-/**
- * Placeholder auth state for ServeTogether.
- *
- * There is no backend auth yet, so the session lives in localStorage and is
- * exposed to React through `useSyncExternalStore` (no setState-in-effect,
- * and no hydration mismatch: the server snapshot is `null`).
- *
- * Swap `readUser`/`writeUser` for a real provider (NextAuth, server actions,
- * ...) without touching consumers.
- */
-
-export type AuthUser = {
-  name: string;
+export interface AuthUser {
+  name?: string;
   email: string;
   image?: string;
-};
+}
 
-export type AuthContextValue = {
+interface AuthContextType {
   user: AuthUser | null;
   login: (user: AuthUser) => void;
   logout: () => void;
-};
+  loading: boolean;
+}
 
-const AuthContext = React.createContext<AuthContextValue | null>(null);
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const STORAGE_KEY = "serve-together-auth";
+const LEGACY_USER_KEY = 'user';
 
-// Fired in the same tab after login/logout (the native `storage` event only
-// fires for changes made by other tabs).
-const CHANGE_EVENT = "serve-together:auth-change";
-
-// Cached snapshot — React requires getSnapshot() to return the same reference
-// as long as the underlying value has not changed.
-let cachedUser: AuthUser | null | undefined;
-
-function parseUser(raw: string | null): AuthUser | null {
-  if (!raw) {
-    return null;
-  }
-
+function readLegacyUser(): AuthUser | null {
   try {
-    const parsed: unknown = JSON.parse(raw);
-    if (
-      parsed &&
-      typeof parsed === "object" &&
-      typeof (parsed as AuthUser).name === "string" &&
-      typeof (parsed as AuthUser).email === "string"
-    ) {
-      return parsed as AuthUser;
-    }
-    return null;
+    const raw = localStorage.getItem(LEGACY_USER_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as AuthUser;
+    return parsed && typeof parsed.email === 'string' ? parsed : null;
   } catch {
     return null;
   }
-}
-
-function readUser(): AuthUser | null {
-  try {
-    return parseUser(window.localStorage.getItem(STORAGE_KEY));
-  } catch {
-    return null;
-  }
-}
-
-function writeUser(user: AuthUser | null) {
-  cachedUser = user;
-
-  try {
-    if (user) {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
-    } else {
-      window.localStorage.removeItem(STORAGE_KEY);
-    }
-  } catch {
-    // Storage unavailable (private mode, quota, ...) — state still updates in memory.
-  }
-
-  window.dispatchEvent(new Event(CHANGE_EVENT));
-}
-
-function getSnapshot(): AuthUser | null {
-  if (typeof window === "undefined") {
-    return null;
-  }
-  if (cachedUser === undefined) {
-    cachedUser = readUser();
-  }
-  return cachedUser;
-}
-
-function getServerSnapshot(): AuthUser | null {
-  return null;
-}
-
-function subscribe(onStoreChange: () => void) {
-  const handleLocalChange = () => onStoreChange();
-
-  const handleStorage = (event: StorageEvent) => {
-    if (event.key === STORAGE_KEY || event.key === null) {
-      cachedUser = readUser();
-      onStoreChange();
-    }
-  };
-
-  window.addEventListener(CHANGE_EVENT, handleLocalChange);
-  window.addEventListener("storage", handleStorage);
-
-  return () => {
-    window.removeEventListener(CHANGE_EVENT, handleLocalChange);
-    window.removeEventListener("storage", handleStorage);
-  };
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const user = React.useSyncExternalStore(
-    subscribe,
-    getSnapshot,
-    getServerSnapshot,
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  // BetterAuth cookie session — this is what hydrates the logged-in state
+  // immediately after the Google OAuth redirect back to the app.
+  const { data: session, isPending } = authClient.useSession();
+
+  useEffect(() => {
+    if (isPending) return;
+
+    const run = async () => {
+      // Yield first: setState must not run synchronously in the effect body
+      // (react-hooks/set-state-in-effect), so sync it after hydration instead.
+      await Promise.resolve();
+
+      if (session?.user) {
+        const currentUser: AuthUser = {
+          name: session.user.name || 'User',
+          email: session.user.email,
+          image: session.user.image || undefined,
+        };
+        setUser(currentUser);
+        try {
+          localStorage.setItem(LEGACY_USER_KEY, JSON.stringify(currentUser));
+        } catch {
+          // Storage unavailable — in-memory state still updates.
+        }
+
+        // Keep a JWT for the Express backend (only when a session exists).
+        fetch('http://localhost:5000/api/auth/jwt-token', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: currentUser.email, name: currentUser.name }),
+        })
+          .then((res) => res.json())
+          .then((data) => {
+            if (data.token) localStorage.setItem('token', data.token);
+          })
+          .catch(() => null);
+      } else {
+        // No BetterAuth session: fall back to the local email-login user.
+        setUser(readLegacyUser());
+      }
+
+      setLoading(false);
+    };
+
+    void run();
+  }, [session, isPending]);
+
+  const login = (userData: AuthUser) => {
+    setUser(userData);
+    try {
+      localStorage.setItem(LEGACY_USER_KEY, JSON.stringify(userData));
+    } catch {
+      // Storage unavailable — state still updates in memory.
+    }
+  };
+
+  const logout = async () => {
+    // Clear local state first so the session effect can never resurrect it.
+    setUser(null);
+    try {
+      localStorage.removeItem(LEGACY_USER_KEY);
+      localStorage.removeItem('token');
+    } catch {
+      // Ignore storage errors.
+    }
+    try {
+      await authClient.signOut();
+    } catch {
+      // Cookie may already be gone.
+    }
+  };
+
+  return (
+    <AuthContext.Provider value={{ user, login, logout, loading }}>
+      {children}
+    </AuthContext.Provider>
   );
-
-  const login = React.useCallback((nextUser: AuthUser) => {
-    writeUser(nextUser);
-  }, []);
-
-  const logout = React.useCallback(() => {
-    writeUser(null);
-  }, []);
-
-  const value: AuthContextValue = React.useMemo(
-    () => ({ user, login, logout }),
-    [user, login, logout],
-  );
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
-export function useAuth(): AuthContextValue {
-  const context = React.useContext(AuthContext);
+export function useAuth() {
+  const context = useContext(AuthContext);
   if (!context) {
-    throw new Error("useAuth must be used within an AuthProvider");
+    throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
 }

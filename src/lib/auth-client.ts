@@ -1,30 +1,15 @@
 'use client';
 
-import { useAuth, type AuthUser } from '@/context/AuthContext';
-import { createAuthClient } from 'better-auth/client';
+import { createAuthClient } from 'better-auth/react';
 
 export const authClient = createAuthClient({
   baseURL: process.env.NEXT_PUBLIC_BETTER_AUTH_URL || 'http://localhost:3000',
+  // Always send/receive BetterAuth session cookies so the session written by
+  // the Google OAuth callback is read back by get-session immediately after
+  // the redirect — even when the client baseURL differs from the page origin.
+  fetchOptions: {
+    credentials: 'include',
+  },
 });
-export type Session = {
-  user: AuthUser;
-  expires: string;
-};
 
-export type UseSessionResult = {
-  data: Session | null;
-  isPending: boolean;
-  error: Error | null;
-};
-
-export function useSession(): UseSessionResult {
-  const { user } = useAuth();
-
-  const data: Session | null = user ? { user, expires: '' } : null;
-
-  return {
-    data,
-    isPending: false,
-    error: null,
-  };
-}
+export const { signIn, signOut, signUp, useSession } = authClient;

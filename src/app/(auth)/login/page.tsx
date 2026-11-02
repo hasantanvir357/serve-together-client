@@ -10,10 +10,11 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/context/AuthContext';
-import { authClient } from '@/lib/auth-client'; // BetterAuth Client Import
+import { authClient } from '@/lib/auth-client';
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PASSWORD_PATTERN = /^(?=.*[a-z])(?=.*[A-Z]).{6,}$/;
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
 function nameFromEmail(email: string): string {
   return email
@@ -38,23 +39,44 @@ export default function LoginPage() {
     setErrors((prev) => ({ ...prev, [field]: undefined }));
   };
 
-  // BetterAuth Google Sign-In Handler
+  // JWT Fetch helper
+  const fetchAndSaveToken = async (email: string, name: string) => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/auth/jwt-token`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, name }),
+      });
+      const data = await res.json();
+      if (data.token) {
+        localStorage.setItem('token', data.token);
+      }
+    } catch (err) {
+      console.error('Failed to fetch JWT token', err);
+    }
+  };
+
   const handleGoogleSignIn = async () => {
     try {
-      await authClient.signIn.social({
+      const res = await authClient.signIn.social({
         provider: 'google',
-        callbackURL: '/', // সফল লগইনের পর হোমপেজে পাঠাবে
+        callbackURL: '/',
       });
+      // Social sign-in may return a redirect (no user yet) — the AuthContext
+      // fetches the backend JWT once the session hydrates after redirect.
+      if (res?.data && 'user' in res.data && res.data.user) {
+        await fetchAndSaveToken(res.data.user.email, res.data.user.name || '');
+      }
     } catch (error) {
       toast.add({
         title: 'Sign-In Error',
-        description: 'Failed to sign in with Google. Please try again.',
+        description: 'Failed to sign in with Google.',
         type: 'error',
       });
     }
   };
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     const nextErrors: Partial<Record<LoginField, string>> = {};
@@ -73,6 +95,8 @@ export default function LoginPage() {
 
     setIsSubmitting(true);
     const name = nameFromEmail(values.email);
+
+    await fetchAndSaveToken(values.email, name);
 
     login({ name, email: values.email });
     toast.add({

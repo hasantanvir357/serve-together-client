@@ -4,22 +4,23 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import type { FormEvent } from 'react';
 import * as React from 'react';
-import { toast } from '@/components/ui/toast';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { useAuth } from '@/context/AuthContext';
-import { authClient } from '@/lib/auth-client'; // BetterAuth Client Import
+import { toast } from '../../../components/ui/toast';
+import { Button } from '../../../components/ui/button';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../../../components/ui/card';
+import { Input } from '../../../components/ui/input';
+import { Label } from '../../../components/ui/label';
+import { useAuth } from '../../../context/AuthContext';
+import { authClient } from '../../../lib/auth-client';
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const HAS_UPPERCASE = /[A-Z]/;
 const HAS_LOWERCASE = /[a-z]/;
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
 type RegisterValues = {
-  firstName: string;
-  lastName: string;
+  name: string;
   email: string;
+  photoURL: string;
   password: string;
   confirmPassword: string;
 };
@@ -30,11 +31,8 @@ type RegisterErrors = Partial<Record<RegisterField, string>>;
 function validate(values: RegisterValues): RegisterErrors {
   const errors: RegisterErrors = {};
 
-  if (!values.firstName.trim()) {
-    errors.firstName = 'Please enter your first name.';
-  }
-  if (!values.lastName.trim()) {
-    errors.lastName = 'Please enter your last name.';
+  if (!values.name.trim()) {
+    errors.name = 'Please enter your full name.';
   }
   if (!EMAIL_PATTERN.test(values.email)) {
     errors.email = 'Please enter a valid email address.';
@@ -54,9 +52,9 @@ export default function RegisterPage() {
   const { login } = useAuth();
   const router = useRouter();
   const [values, setValues] = React.useState<RegisterValues>({
-    firstName: '',
-    lastName: '',
+    name: '',
     email: '',
+    photoURL: '',
     password: '',
     confirmPassword: '',
   });
@@ -68,42 +66,69 @@ export default function RegisterPage() {
     setErrors((prev) => ({ ...prev, [field]: undefined }));
   };
 
-  // BetterAuth Google Sign-Up Handler
+  const fetchAndSaveToken = async (email: string, name: string) => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/auth/jwt-token`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, name }),
+      });
+      const data = await res.json();
+      if (data.token) {
+        localStorage.setItem('token', data.token);
+      }
+    } catch (err) {
+      console.error('Failed to fetch JWT token', err);
+    }
+  };
+
   const handleGoogleSignIn = async () => {
     try {
-      await authClient.signIn.social({
+      const res = await authClient.signIn.social({
         provider: 'google',
         callbackURL: '/',
       });
-    } catch (error) {
+      // Social sign-in may return a redirect (no user yet) — the AuthContext
+      // fetches the backend JWT once the session hydrates after redirect.
+      if (res?.data && 'user' in res.data && res.data.user) {
+        await fetchAndSaveToken(res.data.user.email, res.data.user.name || '');
+      }
+    } catch {
       toast.add({
         title: 'Sign-Up Error',
-        description: 'Failed to sign up with Google. Please try again.',
+        description: 'Failed to sign up with Google.',
         type: 'error',
       });
     }
   };
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     const nextErrors = validate(values);
     if (Object.values(nextErrors).some(Boolean)) {
       setErrors(nextErrors);
+      toast.add({
+        title: 'Validation Error',
+        description: nextErrors.password || nextErrors.name || nextErrors.email || nextErrors.confirmPassword || 'Please fix the highlighted fields.',
+        type: 'error',
+      });
       return;
     }
 
     setIsSubmitting(true);
-    const fullName = `${values.firstName.trim()} ${values.lastName.trim()}`;
+
+    await fetchAndSaveToken(values.email, values.name.trim());
 
     login({
-      name: fullName,
+      name: values.name.trim(),
       email: values.email,
+      image: values.photoURL || undefined,
     });
 
     toast.add({
       title: 'Account created',
-      description: `Welcome aboard, ${fullName}!`,
+      description: `Welcome aboard, ${values.name}!`,
       type: 'success',
     });
     router.push('/');
@@ -120,48 +145,25 @@ export default function RegisterPage() {
         </CardHeader>
         <CardContent>
           <form noValidate onSubmit={handleSubmit} className="flex flex-col gap-4">
-            <div className="grid grid-cols-2 gap-3">
-              <div className="grid gap-2">
-                <Label htmlFor="register-firstname" className="dark:text-slate-200">
-                  First Name
-                </Label>
-                <Input
-                  id="register-firstname"
-                  name="firstName"
-                  placeholder="Tanvir"
-                  required
-                  value={values.firstName}
-                  aria-invalid={errors.firstName ? true : undefined}
-                  onChange={(e) => handleChange('firstName')(e.target.value)}
-                  className="dark:bg-slate-800 dark:border-slate-700 dark:text-white"
-                />
-                {errors.firstName && (
-                  <p role="alert" className="text-xs text-destructive">
-                    {errors.firstName}
-                  </p>
-                )}
-              </div>
-
-              <div className="grid gap-2">
-                <Label htmlFor="register-lastname" className="dark:text-slate-200">
-                  Last Name
-                </Label>
-                <Input
-                  id="register-lastname"
-                  name="lastName"
-                  placeholder="Hasan"
-                  required
-                  value={values.lastName}
-                  aria-invalid={errors.lastName ? true : undefined}
-                  onChange={(e) => handleChange('lastName')(e.target.value)}
-                  className="dark:bg-slate-800 dark:border-slate-700 dark:text-white"
-                />
-                {errors.lastName && (
-                  <p role="alert" className="text-xs text-destructive">
-                    {errors.lastName}
-                  </p>
-                )}
-              </div>
+            <div className="grid gap-2">
+              <Label htmlFor="register-name" className="dark:text-slate-200">
+                Full Name
+              </Label>
+              <Input
+                id="register-name"
+                name="name"
+                placeholder="Your Name"
+                required
+                value={values.name}
+                aria-invalid={errors.name ? true : undefined}
+                onChange={(e) => handleChange('name')(e.target.value)}
+                className="dark:bg-slate-800 dark:border-slate-700 dark:text-white"
+              />
+              {errors.name && (
+                <p role="alert" className="text-xs text-destructive">
+                  {errors.name}
+                </p>
+              )}
             </div>
 
             <div className="grid gap-2">
@@ -185,6 +187,21 @@ export default function RegisterPage() {
                   {errors.email}
                 </p>
               )}
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="register-photourl" className="dark:text-slate-200">
+                Photo URL (Optional)
+              </Label>
+              <Input
+                id="register-photourl"
+                name="photoURL"
+                type="url"
+                placeholder="https://example.com/photo.jpg"
+                value={values.photoURL}
+                onChange={(e) => handleChange('photoURL')(e.target.value)}
+                className="dark:bg-slate-800 dark:border-slate-700 dark:text-white"
+              />
             </div>
 
             <div className="grid gap-2">
