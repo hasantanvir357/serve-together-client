@@ -11,7 +11,7 @@ import { toast } from '@/components/ui/toast';
 import { LoaderCircle, User } from 'lucide-react';
 
 export default function ProfilePage() {
-  const { user } = useAuth();
+  const { user, setUser } = useAuth();
   const router = useRouter();
 
   const [name, setName] = useState('');
@@ -46,9 +46,32 @@ export default function ProfilePage() {
         }),
       });
 
+      const data = await response.json().catch(() => ({}));
+
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || 'Failed to update profile');
+        throw new Error(data.message || 'Failed to update profile');
+      }
+
+      // ১. ফ্রন্টএন্ডের মূল Auth State তাৎক্ষণিক আপডেট করা
+      if (setUser) {
+        setUser((prev: any) => ({
+          ...prev,
+          name: name.trim(),
+          image: image.trim(),
+        }));
+      }
+
+      // ২. লোকাল স্টোরেজে যদি কোনো ইউজার ডাটা ক্যাশ থাকে তাও আপডেট করা
+      try {
+        const stored = localStorage.getItem('user');
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          parsed.name = name.trim();
+          parsed.image = image.trim();
+          localStorage.setItem('user', JSON.stringify(parsed));
+        }
+      } catch (err) {
+        // ignore
       }
 
       toast.add({
@@ -57,9 +80,8 @@ export default function ProfilePage() {
         type: 'success',
       });
 
-      // সরাসরি হোম পেজে রিডাইরেক্ট করা
+      // সরাসরি হোম পেজে পাঠানো
       router.push('/');
-      router.refresh();
     } catch (error) {
       toast.add({
         title: 'Update failed',
