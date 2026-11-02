@@ -1,44 +1,21 @@
-"use client";
+'use client';
 
-import * as React from "react";
-import Link from "next/link";
-import {
-  CalendarDays,
-  MapPin,
-  Search,
-  TriangleAlert,
-  Users,
-} from "lucide-react";
-import { Button, buttonVariants } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import * as React from 'react';
+import Link from 'next/link';
+import { CalendarDays, MapPin, Search, TriangleAlert, Users } from 'lucide-react';
+import { Button, buttonVariants } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
-const EVENTS_API_URL = "http://localhost:5000/api/events";
+const EVENTS_API_URL = process.env.NEXT_PUBLIC_API_URL
+  ? `${process.env.NEXT_PUBLIC_API_URL}/api/events`
+  : 'http://localhost:5000/api/events';
 
 /** The categories the feed can be filtered by, plus "All". */
-const CATEGORIES = [
-  "All",
-  "Tree Plantation",
-  "Winter Clothes",
-  "Blood Drive",
-  "Cleanup",
-  "Education",
-] as const;
+const CATEGORIES = ['All', 'Tree Plantation', 'Winter Clothes', 'Blood Drive', 'Cleanup', 'Education'] as const;
 
 type Category = (typeof CATEGORIES)[number];
 
@@ -55,27 +32,13 @@ type EventItem = {
   imageUrl?: string;
 };
 
-/** Consistent accent colors per category badge. */
-const CATEGORY_STYLES: Record<string, string> = {
-  "Tree Plantation":
-    "bg-primary/10 text-primary ring-primary/20",
-  "Winter Clothes":
-    "bg-secondary/10 text-secondary ring-secondary/20",
-  "Blood Drive":
-    "bg-primary/15 text-primary ring-primary/25",
-  Cleanup:
-    "bg-secondary/15 text-secondary ring-secondary/25",
-  Education:
-    "bg-primary/10 text-primary ring-primary/20",
-};
-
+/** Unified Category Tag styling across Light/Dark modes. */
 function CategoryBadge({ category }: { category: string }) {
   return (
     <span
       className={cn(
-        "inline-flex w-fit items-center rounded-md px-2 py-0.5 text-xs font-medium ring-1 ring-inset",
-        CATEGORY_STYLES[category] ??
-          "bg-muted text-muted-foreground ring-foreground/10",
+        'inline-flex w-fit items-center rounded-md px-2.5 py-1 text-xs font-semibold border transition-colors',
+        'bg-sky-100 text-[#0284c7] border-sky-200 dark:bg-sky-950/60 dark:text-sky-300 dark:border-sky-800/50'
       )}
     >
       {category}
@@ -89,8 +52,8 @@ function EventImage({ src, title }: { src?: string; title: string }) {
   const showPlaceholder = !src || failed;
 
   return showPlaceholder ? (
-    <div className="flex aspect-[16/9] w-full items-center justify-center bg-gradient-to-br from-primary/15 to-secondary/10">
-      <CalendarDays className="size-10 text-primary/60" />
+    <div className="flex aspect-[16/9] w-full items-center justify-center bg-slate-100 dark:bg-slate-800">
+      <CalendarDays className="size-10 text-sky-600 dark:text-sky-400" />
     </div>
   ) : (
     <img
@@ -103,11 +66,11 @@ function EventImage({ src, title }: { src?: string; title: string }) {
   );
 }
 
-const DISPLAY_DATE_FORMAT = new Intl.DateTimeFormat("en-US", {
-  weekday: "short",
-  month: "short",
-  day: "numeric",
-  year: "numeric",
+const DISPLAY_DATE_FORMAT = new Intl.DateTimeFormat('en-US', {
+  weekday: 'short',
+  month: 'short',
+  day: 'numeric',
+  year: 'numeric',
 });
 
 export default function UpcomingEvents() {
@@ -116,8 +79,8 @@ export default function UpcomingEvents() {
   const [loadError, setLoadError] = React.useState<string | null>(null);
   const [reloadKey, setReloadKey] = React.useState(0);
 
-  const [search, setSearch] = React.useState("");
-  const [category, setCategory] = React.useState<Category>("All");
+  const [search, setSearch] = React.useState('');
+  const [category, setCategory] = React.useState<Category>('All');
 
   React.useEffect(() => {
     const controller = new AbortController();
@@ -125,31 +88,24 @@ export default function UpcomingEvents() {
       try {
         const response = await fetch(EVENTS_API_URL, {
           signal: controller.signal,
-          cache: "no-store",
+          cache: 'no-store',
         });
         if (!response.ok) {
           throw new Error(`The server responded with status ${response.status}.`);
         }
         const data: unknown = await response.json();
-        // The API may return either an array or an `{ events: [...] }` envelope.
-        const list =
-          Array.isArray(data)
-            ? data
-            : Array.isArray((data as { events?: unknown }).events)
-              ? (data as { events: EventItem[] }).events
-              : [];
+        const list = Array.isArray(data)
+          ? data
+          : Array.isArray((data as { events?: unknown }).events)
+            ? (data as { events: EventItem[] }).events
+            : [];
         setEvents(list as EventItem[]);
       } catch (error) {
-        if (error instanceof DOMException && error.name === "AbortError") {
+        if (error instanceof DOMException && error.name === 'AbortError') {
           return;
         }
-        setLoadError(
-          error instanceof Error
-            ? error.message
-            : "Something went wrong while loading events.",
-        );
+        setLoadError(error instanceof Error ? error.message : 'Something went wrong while loading events.');
       } finally {
-        // Only finalize loading state if the request was not cancelled.
         if (!controller.signal.aborted) {
           setIsLoading(false);
         }
@@ -169,58 +125,56 @@ export default function UpcomingEvents() {
   const filteredEvents = React.useMemo(() => {
     const query = search.trim().toLowerCase();
     return events.filter((event) => {
-      const matchesCategory =
-        category === "All" || event.category === category;
+      const matchesCategory = category === 'All' || event.category === category;
       const matchesQuery =
-        !query ||
-        event.title.toLowerCase().includes(query) ||
-        event.location.toLowerCase().includes(query);
+        !query || event.title.toLowerCase().includes(query) || event.location.toLowerCase().includes(query);
       return matchesCategory && matchesQuery;
     });
   }, [events, search, category]);
 
   return (
-    <main className="mx-auto grid w-full max-w-6xl flex-1 gap-6 px-4 py-10">
+    <main className="mx-auto grid w-full max-w-6xl flex-1 gap-6 px-4 py-10 dark:text-slate-100">
       <div className="grid gap-1 text-center">
-        <h1 className="text-2xl font-semibold tracking-tight">Upcoming Events</h1>
-        <p className="mx-auto max-w-md text-sm text-muted-foreground">
+        <h1 className="text-3xl font-bold tracking-tight text-slate-800 dark:text-white">Upcoming Events</h1>
+        <p className="mx-auto max-w-md text-sm text-slate-500 dark:text-slate-400">
           Discover volunteer opportunities near you and be the change.
         </p>
       </div>
 
       {/* Filters: search by title/location, filter by category. */}
-      <div className="grid gap-3 rounded-xl border bg-card p-4 sm:grid-cols-[1fr_auto] sm:items-end">
+      <div className="grid gap-3 rounded-xl border border-slate-200 bg-card p-4 dark:border-slate-800 dark:bg-slate-900 sm:grid-cols-[1fr_auto] sm:items-end">
         <div className="grid gap-2">
-          <Label htmlFor="event-search">Search events</Label>
+          <Label htmlFor="event-search" className="dark:text-slate-200">
+            Search events
+          </Label>
           <div className="relative">
             <Search
-              className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground"
+              className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-slate-400"
               aria-hidden="true"
             />
             <Input
               id="event-search"
               type="search"
               placeholder="Search by title or location…"
-              className="pl-8"
+              className="pl-8 dark:bg-slate-800 dark:border-slate-700 dark:text-white"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
         </div>
         <div className="grid gap-2 sm:w-56">
-          <Label htmlFor="event-category">Category</Label>
-          <Select
-            value={category}
-            onValueChange={(value) => setCategory((value ?? "All") as Category)}
-          >
+          <Label htmlFor="event-category" className="dark:text-slate-200">
+            Category
+          </Label>
+          <Select value={category} onValueChange={(value) => setCategory((value ?? 'All') as Category)}>
             <SelectTrigger
               id="event-category"
-              className="w-full"
+              className="w-full dark:bg-slate-800 dark:border-slate-700 dark:text-white"
               aria-label="Filter by category"
             >
               <SelectValue placeholder="All categories" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="dark:bg-slate-900 dark:border-slate-800 dark:text-white">
               {CATEGORIES.map((item) => (
                 <SelectItem key={item} value={item}>
                   {item}
@@ -232,36 +186,30 @@ export default function UpcomingEvents() {
       </div>
 
       {isLoading ? (
-        <div
-          className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3"
-          aria-busy="true"
-          aria-live="polite"
-        >
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 6 }, (_, index) => (
-            <div key={index} className="grid gap-3">
-              <div className="aspect-[16/9] animate-pulse rounded-t-xl bg-muted" />
-              <div className="grid gap-2 px-4">
-                <div className="h-5 w-3/4 animate-pulse rounded bg-muted" />
-                <div className="h-4 w-1/2 animate-pulse rounded bg-muted" />
-                <div className="mt-2 h-9 animate-pulse rounded-lg bg-muted" />
+            <div key={index} className="grid gap-3 rounded-xl border p-4 dark:border-slate-800">
+              <div className="aspect-[16/9] animate-pulse rounded-lg bg-slate-200 dark:bg-slate-800" />
+              <div className="grid gap-2">
+                <div className="h-5 w-3/4 animate-pulse rounded bg-slate-200 dark:bg-slate-800" />
+                <div className="h-4 w-1/2 animate-pulse rounded bg-slate-200 dark:bg-slate-800" />
               </div>
             </div>
           ))}
-          <span className="sr-only">Loading events…</span>
         </div>
       ) : loadError ? (
-        <Card>
+        <Card className="dark:bg-slate-900 dark:border-slate-800">
           <CardHeader className="items-center py-10 text-center">
-            <span className="mx-auto flex size-9 items-center justify-center rounded-lg bg-destructive/10 text-destructive">
+            <span className="mx-auto flex size-9 items-center justify-center rounded-lg bg-red-100 text-red-600 dark:bg-red-950/50 dark:text-red-400">
               <TriangleAlert className="size-5" aria-hidden="true" />
             </span>
-            <CardTitle className="text-lg">Could not load events</CardTitle>
-            <CardDescription className="mx-auto max-w-sm">
+            <CardTitle className="text-lg dark:text-white">Could not load events</CardTitle>
+            <CardDescription className="mx-auto max-w-sm dark:text-slate-400">
               {loadError} Make sure the API server is running, then try again.
             </CardDescription>
             <Button
               variant="outline"
-              className="mt-4 w-fit"
+              className="mt-4 w-fit dark:border-slate-700 dark:text-white"
               onClick={handleRetry}
             >
               Try again
@@ -269,71 +217,73 @@ export default function UpcomingEvents() {
           </CardHeader>
         </Card>
       ) : filteredEvents.length === 0 ? (
-        <Card>
+        <Card className="dark:bg-slate-900 dark:border-slate-800">
           <CardHeader className="items-center py-10 text-center">
-            <span className="mx-auto flex size-9 items-center justify-center rounded-lg bg-primary/10 text-primary ring-1 ring-primary/20">
+            <span className="mx-auto flex size-9 items-center justify-center rounded-lg bg-sky-100 text-[#0284c7] dark:bg-sky-950/50 dark:text-sky-400">
               <CalendarDays className="size-5" aria-hidden="true" />
             </span>
-            <CardTitle className="text-lg">
-              {events.length === 0 ? "No events yet" : "No events match your filters"}
+            <CardTitle className="text-lg dark:text-white">
+              {events.length === 0 ? 'No events yet' : 'No events match your filters'}
             </CardTitle>
-            <CardDescription className="mx-auto max-w-sm">
+            <CardDescription className="mx-auto max-w-sm dark:text-slate-400">
               {events.length === 0
-                ? "There are no upcoming events right now — check back soon."
-                : "Try a different search term or category."}
+                ? 'There are no upcoming events right now — check back soon.'
+                : 'Try a different search term or category.'}
             </CardDescription>
           </CardHeader>
         </Card>
       ) : (
         <>
-          <p className="text-sm text-muted-foreground" aria-live="polite">
+          <p className="text-sm text-slate-500 dark:text-slate-400">
             Showing {filteredEvents.length} of {events.length} event
-            {events.length === 1 ? "" : "s"}
+            {events.length === 1 ? '' : 's'}
           </p>
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {filteredEvents.map((event) => (
-              <Card key={event._id} className="gap-3">
-                <EventImage
-                  src={event.imageUrl}
-                  title={event.title}
-                />
-                <CardHeader>
-                  <CategoryBadge category={event.category} />
-                  <CardTitle className="line-clamp-2">{event.title}</CardTitle>
-                  <CardDescription className="line-clamp-2">
-                    {event.description}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="grid gap-2 text-sm text-muted-foreground">
-                  <span className="flex items-center gap-2">
-                    <MapPin className="size-4 shrink-0" aria-hidden="true" />
-                    <span className="truncate">{event.location}</span>
-                  </span>
-                  <span className="flex items-center gap-2">
-                    <CalendarDays className="size-4 shrink-0" aria-hidden="true" />
-                    {DISPLAY_DATE_FORMAT.format(new Date(event.date))}
-                  </span>
-                  <span className="flex items-center gap-2">
-                    <Users className="size-4 shrink-0" aria-hidden="true" />
-                    <span className="tabular-nums">
-                      Target: {event.volunteersNeeded} volunteer
-                      {event.volunteersNeeded === 1 ? "" : "s"}
-                    </span>
-                  </span>
-                  {/* Fills the remaining space so the button lines up across cards. */}
-                  <div className="flex-1" />
-                  <Link
-                    href={`/events/${event._id}`}
-                    className={cn(
-                      buttonVariants({ variant: "outline" }),
-                      "mt-2 w-full",
-                    )}
-                  >
-                    View Details
-                  </Link>
-                </CardContent>
-              </Card>
-            ))}
+            {filteredEvents.map((event) => {
+              const parsedDate = new Date(event.date);
+              const formattedDate = isNaN(parsedDate.getTime()) ? event.date : DISPLAY_DATE_FORMAT.format(parsedDate);
+
+              return (
+                <Card
+                  key={event._id}
+                  className="flex flex-col overflow-hidden border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm"
+                >
+                  <EventImage src={event.imageUrl} title={event.title} />
+                  <CardHeader className="gap-2 p-5">
+                    <CategoryBadge category={event.category} />
+                    <CardTitle className="line-clamp-1 text-xl font-bold dark:text-white">{event.title}</CardTitle>
+                    <CardDescription className="line-clamp-2 text-sm dark:text-slate-400">
+                      {event.description}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="flex flex-1 flex-col justify-between gap-4 p-5 pt-0 text-sm text-slate-600 dark:text-slate-300">
+                    <div className="grid gap-2">
+                      <span className="flex items-center gap-2">
+                        <MapPin className="size-4 shrink-0 text-slate-400" aria-hidden="true" />
+                        <span className="truncate">{event.location}</span>
+                      </span>
+                      <span className="flex items-center gap-2">
+                        <CalendarDays className="size-4 shrink-0 text-slate-400" aria-hidden="true" />
+                        {formattedDate}
+                      </span>
+                      <span className="flex items-center gap-2">
+                        <Users className="size-4 shrink-0 text-slate-400" aria-hidden="true" />
+                        <span className="tabular-nums">
+                          Target: {event.volunteersNeeded} volunteer
+                          {event.volunteersNeeded === 1 ? '' : 's'}
+                        </span>
+                      </span>
+                    </div>
+                    <Link
+                      href={`/events/${event._id}`}
+                      className="mt-2 w-full rounded-lg bg-[#0284c7] hover:bg-sky-700 text-white font-medium py-2.5 text-center text-sm transition"
+                    >
+                      View Details
+                    </Link>
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
         </>
       )}
