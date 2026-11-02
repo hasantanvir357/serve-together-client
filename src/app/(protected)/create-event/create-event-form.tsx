@@ -28,7 +28,10 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 
-const EVENTS_API_URL = "http://localhost:5000/api/events";
+const EVENTS_API_URL =
+  process.env.NEXT_PUBLIC_API_URL
+    ? `${process.env.NEXT_PUBLIC_API_URL}/api/events`
+    : "https://serve-together-server-ten.vercel.app/api/events";
 
 const CATEGORIES = [
   "Tree Plantation",
