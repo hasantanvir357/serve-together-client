@@ -15,6 +15,7 @@ import {
   Menu,
   Moon,
   Sun,
+  UserCog,
   UserPlus,
   X,
 } from "lucide-react";
@@ -44,6 +45,7 @@ const ACCOUNT_LINKS = [
   { label: "Create Event", href: "/create-event", icon: CalendarPlus },
   { label: "Manage Events", href: "/manage-events", icon: CalendarCog },
   { label: "Joined Events", href: "/joined-events", icon: CalendarCheck },
+  { label: "Edit Profile", href: "/profile", icon: UserCog },
 ];
 
 const MOBILE_LINK_CLASSES =
