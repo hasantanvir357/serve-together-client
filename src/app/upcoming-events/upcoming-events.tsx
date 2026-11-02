@@ -84,15 +84,7 @@ function CategoryBadge({ category }: { category: string }) {
 }
 
 /** Image with a graceful placeholder when it fails to load. */
-function EventImage({
-  src,
-  title,
-  category,
-}: {
-  src?: string;
-  title: string;
-  category: string;
-}) {
+function EventImage({ src, title }: { src?: string; title: string }) {
   const [failed, setFailed] = React.useState(false);
   const showPlaceholder = !src || failed;
 
@@ -122,46 +114,57 @@ export default function UpcomingEvents() {
   const [events, setEvents] = React.useState<EventItem[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
   const [loadError, setLoadError] = React.useState<string | null>(null);
+  const [reloadKey, setReloadKey] = React.useState(0);
 
   const [search, setSearch] = React.useState("");
   const [category, setCategory] = React.useState<Category>("All");
 
-  const loadEvents = React.useCallback(async (signal: AbortSignal) => {
-    setIsLoading(true);
-    setLoadError(null);
-    try {
-      const response = await fetch(EVENTS_API_URL, { signal, cache: "no-store" });
-      if (!response.ok) {
-        throw new Error(`The server responded with status ${response.status}.`);
-      }
-      const data: unknown = await response.json();
-      // The API may return either an array or an `{ events: [...] }` envelope.
-      const list =
-        Array.isArray(data)
-          ? data
-          : Array.isArray((data as { events?: unknown }).events)
-            ? (data as { events: EventItem[] }).events
-            : [];
-      setEvents(list as EventItem[]);
-    } catch (error) {
-      if (error instanceof DOMException && error.name === "AbortError") {
-        return;
-      }
-      setLoadError(
-        error instanceof Error
-          ? error.message
-          : "Something went wrong while loading events.",
-      );
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
   React.useEffect(() => {
     const controller = new AbortController();
-    void loadEvents(controller.signal);
+    const run = async () => {
+      try {
+        const response = await fetch(EVENTS_API_URL, {
+          signal: controller.signal,
+          cache: "no-store",
+        });
+        if (!response.ok) {
+          throw new Error(`The server responded with status ${response.status}.`);
+        }
+        const data: unknown = await response.json();
+        // The API may return either an array or an `{ events: [...] }` envelope.
+        const list =
+          Array.isArray(data)
+            ? data
+            : Array.isArray((data as { events?: unknown }).events)
+              ? (data as { events: EventItem[] }).events
+              : [];
+        setEvents(list as EventItem[]);
+      } catch (error) {
+        if (error instanceof DOMException && error.name === "AbortError") {
+          return;
+        }
+        setLoadError(
+          error instanceof Error
+            ? error.message
+            : "Something went wrong while loading events.",
+        );
+      } finally {
+        // Only finalize loading state if the request was not cancelled.
+        if (!controller.signal.aborted) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    void run();
     return () => controller.abort();
-  }, [loadEvents]);
+  }, [reloadKey]);
+
+  const handleRetry = React.useCallback(() => {
+    setIsLoading(true);
+    setLoadError(null);
+    setReloadKey((key) => key + 1);
+  }, []);
 
   const filteredEvents = React.useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -259,7 +262,7 @@ export default function UpcomingEvents() {
             <Button
               variant="outline"
               className="mt-4 w-fit"
-              onClick={() => void loadEvents(new AbortController().signal)}
+              onClick={handleRetry}
             >
               Try again
             </Button>
@@ -293,7 +296,6 @@ export default function UpcomingEvents() {
                 <EventImage
                   src={event.imageUrl}
                   title={event.title}
-                  category={event.category}
                 />
                 <CardHeader>
                   <CategoryBadge category={event.category} />

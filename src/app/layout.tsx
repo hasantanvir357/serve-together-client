@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
@@ -19,6 +20,26 @@ export const metadata: Metadata = {
   icons: { icon: "/favicon.png" },
 };
 
+/**
+ * Fallback for the Navbar's `<Suspense>` boundary. The real Navbar reads
+ * the runtime pathname (`usePathname`), so it streams in behind this
+ * skeleton on dynamic routes.
+ */
+function NavbarSkeleton() {
+  return (
+    <header
+      className="sticky top-0 z-40 w-full border-b border-border bg-background/80 backdrop-blur"
+      aria-busy="true"
+    >
+      <div className="mx-auto flex h-14 w-full max-w-6xl items-center justify-between gap-3 px-4">
+        <div className="h-7 w-28 animate-pulse rounded bg-muted" />
+        <div className="hidden h-4 w-64 animate-pulse rounded bg-muted md:block" />
+        <div className="h-8 w-36 animate-pulse rounded bg-muted" />
+      </div>
+    </header>
+  );
+}
+
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
@@ -29,7 +50,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="min-h-full flex flex-col">
         <ThemeProvider>
           <AuthProvider>
-            <Navbar />
+            <Suspense fallback={<NavbarSkeleton />}>
+              <Navbar />
+            </Suspense>
             {children}
             <Toaster />
           </AuthProvider>

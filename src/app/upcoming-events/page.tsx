@@ -48,19 +48,15 @@ type EventItem = {
 };
 
 function EventImage({ src, title }: { src?: string; title: string }) {
-  const initialSrc = src && src.trim() !== "" ? src : FALLBACK_IMAGE;
-  const [imgSrc, setImgSrc] = React.useState(initialSrc);
-
-  React.useEffect(() => {
-    setImgSrc(src && src.trim() !== "" ? src : FALLBACK_IMAGE);
-  }, [src]);
+  const [failed, setFailed] = React.useState(false);
+  const imgSrc = failed ? FALLBACK_IMAGE : src && src.trim() !== "" ? src : FALLBACK_IMAGE;
 
   return (
     <img
       src={imgSrc}
       alt={title}
       loading="lazy"
-      onError={() => setImgSrc(FALLBACK_IMAGE)}
+      onError={() => setFailed(true)}
       className="aspect-[16/9] w-full object-cover rounded-t-xl"
     />
   );
@@ -77,44 +73,55 @@ export default function UpcomingEventsPage() {
   const [events, setEvents] = React.useState<EventItem[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
   const [loadError, setLoadError] = React.useState<string | null>(null);
+  const [reloadKey, setReloadKey] = React.useState(0);
 
   const [search, setSearch] = React.useState("");
   const [category, setCategory] = React.useState<string>("All");
 
-  const loadEvents = React.useCallback(async (signal: AbortSignal) => {
-    setIsLoading(true);
-    setLoadError(null);
-    try {
-      const response = await fetch(EVENTS_API_URL, { signal, cache: "no-store" });
-      if (!response.ok) {
-        throw new Error(`The server responded with status ${response.status}.`);
-      }
-      const data: unknown = await response.json();
-      const list = Array.isArray(data)
-        ? data
-        : Array.isArray((data as { events?: unknown }).events)
-          ? (data as { events: EventItem[] }).events
-          : [];
-      setEvents(list as EventItem[]);
-    } catch (error) {
-      if (error instanceof DOMException && error.name === "AbortError") {
-        return;
-      }
-      setLoadError(
-        error instanceof Error
-          ? error.message
-          : "Something went wrong while loading events.",
-      );
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
   React.useEffect(() => {
     const controller = new AbortController();
-    void loadEvents(controller.signal);
+    const run = async () => {
+      try {
+        const response = await fetch(EVENTS_API_URL, {
+          signal: controller.signal,
+          cache: "no-store",
+        });
+        if (!response.ok) {
+          throw new Error(`The server responded with status ${response.status}.`);
+        }
+        const data: unknown = await response.json();
+        const list = Array.isArray(data)
+          ? data
+          : Array.isArray((data as { events?: unknown }).events)
+            ? (data as { events: EventItem[] }).events
+            : [];
+        setEvents(list as EventItem[]);
+      } catch (error) {
+        if (error instanceof DOMException && error.name === "AbortError") {
+          return;
+        }
+        setLoadError(
+          error instanceof Error
+            ? error.message
+            : "Something went wrong while loading events.",
+        );
+      } finally {
+        // Only finalize loading state if the request was not cancelled.
+        if (!controller.signal.aborted) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    void run();
     return () => controller.abort();
-  }, [loadEvents]);
+  }, [reloadKey]);
+
+  const handleRetry = React.useCallback(() => {
+    setIsLoading(true);
+    setLoadError(null);
+    setReloadKey((key) => key + 1);
+  }, []);
 
   const filteredEvents = React.useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -193,7 +200,7 @@ export default function UpcomingEventsPage() {
             </CardDescription>
             <Button
               className="mt-4 bg-[#0284c7] hover:bg-[#0284c7]/90 text-white"
-              onClick={() => void loadEvents(new AbortController().signal)}
+              onClick={handleRetry}
             >
               Try again
             </Button>
