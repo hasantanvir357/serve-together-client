@@ -27,11 +27,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { API_BASE_URL, getAuthHeaders } from "@/lib/api-client";
 
-const EVENTS_API_URL =
-  process.env.NEXT_PUBLIC_API_URL
-    ? `${process.env.NEXT_PUBLIC_API_URL}/api/events`
-    : "https://serve-together-server-ten.vercel.app/api/events";
+const EVENTS_API_URL = `${API_BASE_URL}/api/events`;
 
 const CATEGORIES = [
   "Tree Plantation",
@@ -67,6 +65,12 @@ type EventErrors = Partial<Record<EventField, string>>;
 
 function validate(values: EventValues): EventErrors {
   const errors: EventErrors = {};
+  const volunteersNeeded = Number(values.volunteersNeeded);
+  const selectedDate = values.date ? new Date(`${values.date}T00:00:00`) : null;
+  const isValidDate =
+    selectedDate !== null &&
+    !Number.isNaN(selectedDate.getTime()) &&
+    selectedDate.toISOString().slice(0, 10) === values.date;
 
   if (values.title.trim().length < 3) {
     errors.title = "Please enter an event title (at least 3 characters).";
@@ -77,10 +81,10 @@ function validate(values: EventValues): EventErrors {
   if (!values.location.trim()) {
     errors.location = "Please enter the event location.";
   }
-  if (!values.date) {
-    errors.date = "Please pick a date.";
+  if (!isValidDate || values.date < localDateISO()) {
+    errors.date = "Please choose a valid date today or later.";
   }
-  if (!values.volunteersNeeded || Number(values.volunteersNeeded) < 1) {
+  if (!Number.isInteger(volunteersNeeded) || volunteersNeeded < 1) {
     errors.volunteersNeeded = "Target volunteers must be at least 1.";
   }
   if (!URL_PATTERN.test(values.imageUrl)) {
@@ -125,13 +129,21 @@ export default function CreateEventForm() {
       return;
     }
 
+    const authHeaders = getAuthHeaders();
+    if (!authHeaders) {
+      toast.add({
+        title: "Session expired",
+        description: "Please sign in again before creating an event.",
+        type: "error",
+      });
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       const response = await fetch(EVENTS_API_URL, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        // Field names match the Express server's expected schema exactly;
-        // volunteersNeeded must be a true number before it is serialized.
+        headers: { "Content-Type": "application/json", ...authHeaders },
         body: JSON.stringify({
           title: values.title.trim(),
           description: values.description.trim(),
@@ -147,19 +159,20 @@ export default function CreateEventForm() {
       });
 
       if (!response.ok) {
-        // Surface the exact server error body for debugging.
         const rawError = await response.text().catch(() => "");
         let serverError: unknown = rawError;
         try {
           serverError = JSON.parse(rawError);
         } catch {
-          // Not JSON — log the raw text as-is.
         }
-        console.error(
-          `POST ${EVENTS_API_URL} failed with status ${response.status}:`,
-          serverError,
-        );
-        throw new Error(`The server responded with status ${response.status}.`);
+        const message =
+          serverError &&
+          typeof serverError === "object" &&
+          "message" in serverError &&
+          typeof serverError.message === "string"
+            ? serverError.message
+            : `The server responded with status ${response.status}.`;
+        throw new Error(message);
       }
 
       toast.add({
@@ -177,6 +190,7 @@ export default function CreateEventForm() {
             : "Something went wrong — please try again.",
         type: "error",
       });
+    } finally {
       setIsSubmitting(false);
     }
   };

@@ -209,6 +209,15 @@ function MobileMenu() {
   const [open, setOpen] = React.useState(false);
   const pathname = usePathname();
   const close = React.useCallback(() => setOpen(false), []);
+  const mounted = React.useSyncExternalStore(
+    subscribeNoop,
+    getClientSnapshot,
+    getServerSnapshot,
+  );
+
+  if (!mounted) {
+    return <div className="h-9 w-9 md:hidden" aria-hidden="true" />;
+  }
 
   const links = [...HOME_LINKS, ...(user ? ACCOUNT_LINKS : [])];
 

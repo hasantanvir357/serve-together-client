@@ -11,10 +11,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/context/AuthContext';
 import { authClient } from '@/lib/auth-client';
+import { saveBackendToken } from '@/lib/api-client';
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PASSWORD_PATTERN = /^(?=.*[a-z])(?=.*[A-Z]).{6,}$/;
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
 function nameFromEmail(email: string): string {
   return email
@@ -39,35 +39,16 @@ export default function LoginPage() {
     setErrors((prev) => ({ ...prev, [field]: undefined }));
   };
 
-  // JWT Fetch helper
-  const fetchAndSaveToken = async (email: string, name: string) => {
-    try {
-      const res = await fetch(`${API_BASE_URL}/api/auth/jwt-token`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, name }),
-      });
-      const data = await res.json();
-      if (data.token) {
-        localStorage.setItem('token', data.token);
-      }
-    } catch (err) {
-      console.error('Failed to fetch JWT token', err);
-    }
-  };
-
   const handleGoogleSignIn = async () => {
     try {
       const res = await authClient.signIn.social({
         provider: 'google',
         callbackURL: '/',
       });
-      // Social sign-in may return a redirect (no user yet) — the AuthContext
-      // fetches the backend JWT once the session hydrates after redirect.
       if (res?.data && 'user' in res.data && res.data.user) {
-        await fetchAndSaveToken(res.data.user.email, res.data.user.name || '');
+        await saveBackendToken({ email: res.data.user.email, name: res.data.user.name || '' });
       }
-    } catch (error) {
+    } catch {
       toast.add({
         title: 'Sign-In Error',
         description: 'Failed to sign in with Google.',
@@ -96,7 +77,7 @@ export default function LoginPage() {
     setIsSubmitting(true);
     const name = nameFromEmail(values.email);
 
-    await fetchAndSaveToken(values.email, name);
+    await saveBackendToken({ email: values.email, name });
 
     login({ name, email: values.email });
     toast.add({

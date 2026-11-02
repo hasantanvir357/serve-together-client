@@ -8,6 +8,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useSession } from '../../lib/auth-client';
 import { useMounted } from '../../lib/use-mounted';
 import { toast } from '../../components/ui/toast';
+import { API_BASE_URL, getAuthHeaders } from '../../lib/api-client';
 
 interface EventItem {
   _id: string;
@@ -24,7 +25,6 @@ interface EventItem {
 }
 
 const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1559027615-cd4628902d4a?q=80&w=600';
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
 export default function JoinedEventsPage() {
   const { user: authUser } = useAuth() || {};
@@ -34,7 +34,6 @@ export default function JoinedEventsPage() {
   const [leavingId, setLeavingId] = useState<string | null>(null);
   const mounted = useMounted();
 
-  // Extract email reliably from either AuthContext or Session
   const userEmail = (authUser?.email || session?.user?.email || '').trim().toLowerCase();
 
   useEffect(() => {
@@ -42,7 +41,6 @@ export default function JoinedEventsPage() {
     if (isSessionPending && !authUser) return;
 
     if (!userEmail) {
-      setIsLoading(false);
       return;
     }
 
@@ -50,21 +48,30 @@ export default function JoinedEventsPage() {
     const run = async () => {
       try {
         setIsLoading(true);
+        const authHeaders = getAuthHeaders();
+        if (!authHeaders) {
+          throw new Error('Your session has expired. Please sign in again.');
+        }
+
         const res = await fetch(`${API_BASE_URL}/api/events/joined?userEmail=${encodeURIComponent(userEmail)}`, {
           signal: controller.signal,
           credentials: 'include',
+          headers: authHeaders,
         });
 
         if (res.ok) {
           const data = await res.json();
-          // Directly set the returned joined events array from API
           setEvents(Array.isArray(data) ? data : []);
         } else {
           setEvents([]);
         }
-      } catch (err: any) {
-        if (err.name !== 'AbortError') {
-          console.error('Failed to load joined events:', err);
+      } catch (error: unknown) {
+        if (!(error instanceof DOMException && error.name === 'AbortError')) {
+          toast.add({
+            title: 'Could not load joined events',
+            description: error instanceof Error ? error.message : 'Please try again.',
+            type: 'error',
+          });
         }
       } finally {
         if (!controller.signal.aborted) {
@@ -77,23 +84,27 @@ export default function JoinedEventsPage() {
     return () => controller.abort();
   }, [userEmail, isSessionPending, authUser, mounted]);
 
-  // Handle Leave Event Logic
   const handleLeaveEvent = async (eventId: string) => {
     if (!userEmail) return;
 
     setLeavingId(eventId);
     try {
+      const authHeaders = getAuthHeaders();
+      if (!authHeaders) {
+        throw new Error('Your session has expired. Please sign in again.');
+      }
+
       const res = await fetch(`${API_BASE_URL}/api/events/${eventId}/leave`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          ...authHeaders,
         },
         credentials: 'include',
         body: JSON.stringify({ userEmail }),
       });
 
       if (res.ok) {
-        // Optimistically remove the event from UI
         setEvents((prev) => prev.filter((ev) => ev._id !== eventId));
         if (toast?.add) {
           toast.add({
@@ -127,7 +138,6 @@ export default function JoinedEventsPage() {
     );
   }
 
-  // Render joined event cards sorted by date (soonest first)
   const sortedEvents = [...events].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
   return (

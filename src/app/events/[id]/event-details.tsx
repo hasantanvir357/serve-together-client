@@ -10,6 +10,7 @@ import { useAuth } from '../../../context/AuthContext';
 import { useMounted } from '../../../lib/use-mounted';
 import { findSeedEvent } from '../../../lib/seed-events';
 import { toast } from '../../../components/ui/toast';
+import { getAuthHeaders } from '../../../lib/api-client';
 
 interface EventDoc {
   _id: string;
@@ -43,8 +44,6 @@ export default function EventDetails({ eventId }: { eventId: string }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const mounted = useMounted();
 
-  // Single source of truth: BetterAuth session (Google OAuth / email-password)
-  // first, then the AuthContext user (local login).
   const userEmail = useMemo(
     () =>
       (session?.user?.email || authUser?.email || '').trim().toLowerCase(),
@@ -81,8 +80,6 @@ export default function EventDetails({ eventId }: { eventId: string }) {
         if (error instanceof DOMException && error.name === 'AbortError') {
           return;
         }
-        console.error('Failed to load event', error);
-
         const seedMatch = findSeedEvent(eventId);
         if (seedMatch) {
           setEvent(seedMatch);
@@ -115,14 +112,22 @@ export default function EventDetails({ eventId }: { eventId: string }) {
     const joining = !hasJoined;
     setIsSubmitting(true);
 
-    const token = localStorage.getItem('token') || '';
+    const authHeaders = getAuthHeaders();
+    if (!authHeaders) {
+      toast.add({
+        title: 'Session expired',
+        description: 'Please sign in again before changing your event status.',
+        type: 'error',
+      });
+      return;
+    }
 
     try {
       const res = await fetch(`${API_BASE_URL}/api/events/${eventId}/${joining ? 'join' : 'leave'}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
+          ...authHeaders,
         },
         body: JSON.stringify({ userEmail, email: userEmail }),
       });
@@ -151,8 +156,7 @@ export default function EventDetails({ eventId }: { eventId: string }) {
           type: 'error',
         });
       }
-    } catch (error) {
-      console.error('Error updating volunteer status:', error);
+    } catch {
       toast.add({
         title: 'Error',
         description: joining ? 'An error occurred while joining.' : 'An error occurred while leaving.',

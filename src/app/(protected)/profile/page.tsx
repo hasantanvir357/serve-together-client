@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
@@ -9,40 +9,70 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/toast';
 import { LoaderCircle, User } from 'lucide-react';
+import { API_BASE_URL, getAuthHeaders } from '@/lib/api-client';
 
 export default function ProfilePage() {
-  const { user, setUser } = useAuth();
+  const { user, updateUser } = useAuth();
   const router = useRouter();
 
-  const [name, setName] = useState('');
-  const [image, setImage] = useState('');
+  const [nameDraft, setNameDraft] = useState<string | null>(null);
+  const [imageDraft, setImageDraft] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  useEffect(() => {
-    if (user) {
-      setName(user.name || '');
-      setImage(user.image || '');
-    }
-  }, [user]);
+  const name = nameDraft ?? user?.name ?? '';
+  const image = imageDraft ?? user?.image ?? '';
 
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim()) {
+    const nextName = name.trim();
+    const nextImage = image.trim();
+
+    if (!nextName) {
       toast.add({ title: 'Name cannot be empty', type: 'error' });
       return;
     }
 
+    if (nextImage) {
+      try {
+        const imageUrl = new URL(nextImage);
+        if (!['http:', 'https:'].includes(imageUrl.protocol)) {
+          throw new Error('invalid protocol');
+        }
+      } catch {
+        toast.add({
+          title: 'Invalid photo URL',
+          description: 'Use a valid http:// or https:// image URL.',
+          type: 'error',
+        });
+        return;
+      }
+    }
+
+    if (!user?.email) {
+      toast.add({ title: 'Update failed', description: 'Your session is not ready.', type: 'error' });
+      return;
+    }
+
+    const authHeaders = getAuthHeaders();
+    if (!authHeaders) {
+      toast.add({
+        title: 'Session expired',
+        description: 'Please sign in again before updating your profile.',
+        type: 'error',
+      });
+      return;
+    }
+
     setIsSubmitting(true);
-    const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://serve-together-server-ten.vercel.app';
 
     try {
-      const response = await fetch(`${API_BASE}/api/auth/profile`, {
+      const response = await fetch(`${API_BASE_URL}/api/auth/profile`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...authHeaders },
         body: JSON.stringify({
-          email: user?.email,
-          name: name.trim(),
-          image: image.trim(),
+          email: user.email,
+          name: nextName,
+          image: nextImage,
         }),
       });
 
@@ -52,27 +82,7 @@ export default function ProfilePage() {
         throw new Error(data.message || 'Failed to update profile');
       }
 
-      // ১. ফ্রন্টএন্ডের মূল Auth State তাৎক্ষণিক আপডেট করা
-      if (setUser) {
-        setUser((prev: any) => ({
-          ...prev,
-          name: name.trim(),
-          image: image.trim(),
-        }));
-      }
-
-      // ২. লোকাল স্টোরেজে যদি কোনো ইউজার ডাটা ক্যাশ থাকে তাও আপডেট করা
-      try {
-        const stored = localStorage.getItem('user');
-        if (stored) {
-          const parsed = JSON.parse(stored);
-          parsed.name = name.trim();
-          parsed.image = image.trim();
-          localStorage.setItem('user', JSON.stringify(parsed));
-        }
-      } catch (err) {
-        // ignore
-      }
+      await updateUser({ name: nextName, image: nextImage || undefined });
 
       toast.add({
         title: 'Profile Updated',
@@ -80,7 +90,6 @@ export default function ProfilePage() {
         type: 'success',
       });
 
-      // সরাসরি হোম পেজে পাঠানো
       router.push('/');
     } catch (error) {
       toast.add({
@@ -126,7 +135,7 @@ export default function ProfilePage() {
               <Input
                 id="name"
                 value={name}
-                onChange={(e) => setName(e.target.value)}
+                onChange={(e) => setNameDraft(e.target.value)}
                 placeholder="Enter your full name"
                 required
               />
@@ -138,7 +147,7 @@ export default function ProfilePage() {
                 id="image"
                 type="url"
                 value={image}
-                onChange={(e) => setImage(e.target.value)}
+                onChange={(e) => setImageDraft(e.target.value)}
                 placeholder="https://example.com/avatar.png"
               />
             </div>

@@ -7,6 +7,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useSession } from '@/lib/auth-client';
 import { useMounted } from '@/lib/use-mounted';
 import { toast } from '@/components/ui/toast';
+import { API_BASE_URL, getAuthHeaders } from '@/lib/api-client';
 
 interface EventItem {
   _id: string;
@@ -17,8 +18,6 @@ interface EventItem {
   volunteersNeeded: number;
 }
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
-
 export default function ManageEvents() {
   const { user: authUser } = useAuth() || {};
   const { data: session } = useSession() || {};
@@ -27,7 +26,6 @@ export default function ManageEvents() {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const mounted = useMounted();
 
-  // Unified email extraction
   const email = (authUser?.email || session?.user?.email || '').trim().toLowerCase();
 
   useEffect(() => {
@@ -37,33 +35,36 @@ export default function ManageEvents() {
     const run = async () => {
       try {
         setIsLoading(true);
-        // If email is available, fetch user specific events; otherwise fallback to all events
-        const fetchUrl = email
-          ? `${API_BASE_URL}/api/events/my-events?email=${encodeURIComponent(email)}`
-          : `${API_BASE_URL}/api/events`;
+        if (!email) {
+          return;
+        }
+
+        const authHeaders = getAuthHeaders();
+        if (!authHeaders) {
+          throw new Error('Your session has expired. Please sign in again.');
+        }
+
+        const fetchUrl = `${API_BASE_URL}/api/events/my-events?email=${encodeURIComponent(email)}`;
 
         const res = await fetch(fetchUrl, {
           signal: controller.signal,
           credentials: 'include',
+          headers: authHeaders,
         });
 
         if (res.ok) {
           const data = await res.json();
           setEvents(Array.isArray(data) ? data : data.events || []);
         } else {
-          // Secondary fallback
-          const fallbackRes = await fetch(`${API_BASE_URL}/api/events`, {
-            signal: controller.signal,
-            credentials: 'include',
-          });
-          if (fallbackRes.ok) {
-            const fallbackData = await fallbackRes.json();
-            setEvents(Array.isArray(fallbackData) ? fallbackData : fallbackData.events || []);
-          }
+          throw new Error(`The server responded with status ${res.status}.`);
         }
-      } catch (err: any) {
-        if (err.name !== 'AbortError') {
-          console.error('Failed to load user events:', err);
+      } catch (error: unknown) {
+        if (!(error instanceof DOMException && error.name === 'AbortError')) {
+          toast.add({
+            title: 'Could not load your events',
+            description: error instanceof Error ? error.message : 'Please try again.',
+            type: 'error',
+          });
         }
       } finally {
         if (!controller.signal.aborted) {
@@ -80,9 +81,14 @@ export default function ManageEvents() {
     if (!deleteId) return;
 
     try {
+      const authHeaders = getAuthHeaders();
+      if (!authHeaders) {
+        throw new Error('Your session has expired. Please sign in again.');
+      }
+
       const res = await fetch(`${API_BASE_URL}/api/events/${deleteId}`, {
         method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...authHeaders },
         body: JSON.stringify({ userEmail: email }),
         credentials: 'include',
       });

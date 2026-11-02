@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { authClient } from '../lib/auth-client';
+import { saveBackendToken } from '../lib/api-client';
 
 export interface AuthUser {
   name?: string;
@@ -12,6 +13,7 @@ export interface AuthUser {
 interface AuthContextType {
   user: AuthUser | null;
   login: (user: AuthUser) => void;
+  updateUser: (updates: Pick<AuthUser, 'name' | 'image'>) => Promise<void>;
   logout: () => void;
   loading: boolean;
 }
@@ -31,20 +33,28 @@ function readLegacyUser(): AuthUser | null {
   }
 }
 
+function persistUser(user: AuthUser | null) {
+  try {
+    if (user) {
+      localStorage.setItem(LEGACY_USER_KEY, JSON.stringify(user));
+    } else {
+      localStorage.removeItem(LEGACY_USER_KEY);
+    }
+  } catch {
+    // Storage can be unavailable in privacy-restricted browser contexts.
+  }
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // BetterAuth cookie session — this is what hydrates the logged-in state
-  // immediately after the Google OAuth redirect back to the app.
   const { data: session, isPending } = authClient.useSession();
 
   useEffect(() => {
     if (isPending) return;
 
     const run = async () => {
-      // Yield first: setState must not run synchronously in the effect body
-      // (react-hooks/set-state-in-effect), so sync it after hydration instead.
       await Promise.resolve();
 
       if (session?.user) {
@@ -54,25 +64,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           image: session.user.image || undefined,
         };
         setUser(currentUser);
-        try {
-          localStorage.setItem(LEGACY_USER_KEY, JSON.stringify(currentUser));
-        } catch {
-          // Storage unavailable — in-memory state still updates.
-        }
-
-        // Keep a JWT for the Express backend (only when a session exists).
-        fetch('http://localhost:5000/api/auth/jwt-token', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: currentUser.email, name: currentUser.name }),
-        })
-          .then((res) => res.json())
-          .then((data) => {
-            if (data.token) localStorage.setItem('token', data.token);
-          })
-          .catch(() => null);
+        persistUser(currentUser);
+        void saveBackendToken(currentUser);
       } else {
-        // No BetterAuth session: fall back to the local email-login user.
         setUser(readLegacyUser());
       }
 
@@ -84,31 +78,53 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = (userData: AuthUser) => {
     setUser(userData);
-    try {
-      localStorage.setItem(LEGACY_USER_KEY, JSON.stringify(userData));
-    } catch {
-      // Storage unavailable — state still updates in memory.
+    persistUser(userData);
+    void saveBackendToken(userData);
+  };
+
+  const updateUser = async (updates: Pick<AuthUser, 'name' | 'image'>) => {
+    if (!user) {
+      throw new Error('You must be signed in to update your profile.');
     }
+
+    const nextUser: AuthUser = {
+      ...user,
+      ...updates,
+      image: updates.image || undefined,
+    };
+
+    setUser(nextUser);
+    persistUser(nextUser);
+
+    if (session?.user) {
+      try {
+        await authClient.updateUser({
+          name: updates.name,
+          image: updates.image ?? null,
+        });
+      } catch {
+        // The local state remains the source of truth for this session.
+      }
+    }
+
+    await saveBackendToken(nextUser);
   };
 
   const logout = async () => {
-    // Clear local state first so the session effect can never resurrect it.
     setUser(null);
     try {
       localStorage.removeItem(LEGACY_USER_KEY);
       localStorage.removeItem('token');
     } catch {
-      // Ignore storage errors.
     }
     try {
       await authClient.signOut();
     } catch {
-      // Cookie may already be gone.
     }
   };
 
   return (
-    <AuthContext.Provider value={{ user,setUser, login, logout, loading }}>
+    <AuthContext.Provider value={{ user, login, updateUser, logout, loading }}>
       {children}
     </AuthContext.Provider>
   );
