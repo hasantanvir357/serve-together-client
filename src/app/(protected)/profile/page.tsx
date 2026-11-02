@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -8,10 +9,11 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/toast';
 import { LoaderCircle, User } from 'lucide-react';
-import { authClient } from '@/lib/auth-client'; // আপনার Better Auth ক্লায়েন্ট
 
 export default function ProfilePage() {
   const { user } = useAuth();
+  const router = useRouter();
+
   const [name, setName] = useState('');
   const [image, setImage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -34,7 +36,6 @@ export default function ProfilePage() {
     const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://serve-together-server-ten.vercel.app';
 
     try {
-      // ১. ব্যাকএন্ড ডাটাবেসে আপডেট পাঠানো
       const response = await fetch(`${API_BASE}/api/auth/profile`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -50,32 +51,15 @@ export default function ProfilePage() {
         throw new Error(errorData.message || 'Failed to update profile');
       }
 
-      // ২. Better Auth-এর ইন্টারনাল ইউজার আপডেট (যদি ক্লায়েন্ট সাপোর্ট করে)
-      try {
-        if (authClient?.updateUser) {
-          await authClient.updateUser({
-            name: name.trim(),
-            image: image.trim(),
-          });
-        }
-      } catch (authErr) {
-        console.warn('Better-auth client sync skipped', authErr);
-      }
-
       toast.add({
         title: 'Profile Updated',
-        description: 'Your name and photo have been updated successfully.',
+        description: 'Your changes have been saved.',
         type: 'success',
       });
 
-      // ৩. স্টেট সরাসরি আপডেট রাখা
-      setName(name.trim());
-      setImage(image.trim());
-
-      // ৪. সম্পূর্ণ সেশন রিফ্রেশ করে হোম অথবা ড্যাশবোর্ডে সিঙ্ক করা
-      setTimeout(() => {
-        window.location.reload();
-      }, 800);
+      // সরাসরি হোম পেজে রিডাইরেক্ট করা
+      router.push('/');
+      router.refresh();
     } catch (error) {
       toast.add({
         title: 'Update failed',
@@ -133,18 +117,15 @@ export default function ProfilePage() {
                 type="url"
                 value={image}
                 onChange={(e) => setImage(e.target.value)}
-                placeholder="https://images.unsplash.com/..."
+                placeholder="https://example.com/avatar.png"
               />
-              <p className="text-xs text-muted-foreground">
-                ছবির সরাসরি লিংক দিন (যেমন Clash of Clans বা Unsplash-এর ছবি)।
-              </p>
             </div>
 
             <Button type="submit" disabled={isSubmitting} className="w-full mt-2">
               {isSubmitting ? (
                 <>
                   <LoaderCircle className="animate-spin mr-2 size-4" />
-                  Saving...
+                  Saving Changes...
                 </>
               ) : (
                 'Save Changes'
