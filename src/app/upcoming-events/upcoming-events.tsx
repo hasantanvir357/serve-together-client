@@ -136,7 +136,7 @@ export default function UpcomingEvents() {
     <main className="mx-auto grid w-full max-w-6xl flex-1 gap-6 px-4 py-10 dark:text-slate-100">
       <div className="grid gap-1 text-center">
         <h1 className="text-3xl font-bold tracking-tight text-slate-800 dark:text-white">Upcoming Events</h1>
-        <p className="mx-auto max-w-md text-sm text-slate-500 dark:text-slate-400">
+        <p className="mx-auto max-w-md text-sm text-slate-500 dark:text-slate-300">
           Discover volunteer opportunities near you and be the change.
         </p>
       </div>
@@ -204,7 +204,7 @@ export default function UpcomingEvents() {
               <TriangleAlert className="size-5" aria-hidden="true" />
             </span>
             <CardTitle className="text-lg dark:text-white">Could not load events</CardTitle>
-            <CardDescription className="mx-auto max-w-sm dark:text-slate-400">
+            <CardDescription className="mx-auto max-w-sm dark:text-slate-300">
               {loadError} Make sure the API server is running, then try again.
             </CardDescription>
             <Button
@@ -225,7 +225,7 @@ export default function UpcomingEvents() {
             <CardTitle className="text-lg dark:text-white">
               {events.length === 0 ? 'No events yet' : 'No events match your filters'}
             </CardTitle>
-            <CardDescription className="mx-auto max-w-sm dark:text-slate-400">
+            <CardDescription className="mx-auto max-w-sm dark:text-slate-300">
               {events.length === 0
                 ? 'There are no upcoming events right now — check back soon.'
                 : 'Try a different search term or category.'}
@@ -234,7 +234,7 @@ export default function UpcomingEvents() {
         </Card>
       ) : (
         <>
-          <p className="text-sm text-slate-500 dark:text-slate-400">
+              <p className="text-sm text-slate-500 dark:text-slate-300">
             Showing {filteredEvents.length} of {events.length} event
             {events.length === 1 ? '' : 's'}
           </p>
@@ -256,7 +256,7 @@ export default function UpcomingEvents() {
                   <CardHeader className="gap-2 p-5">
                     <EventBadge label={event.category} />
                     <CardTitle className="line-clamp-1 text-xl font-bold dark:text-white">{event.title}</CardTitle>
-                    <CardDescription className="line-clamp-2 text-sm dark:text-slate-400">
+                    <CardDescription className="line-clamp-2 text-sm dark:text-slate-300">
                       {event.description}
                     </CardDescription>
                   </CardHeader>

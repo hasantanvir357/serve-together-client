@@ -47,7 +47,7 @@ export default function Testimonials() {
     >
       {/* Header */}
       <div className="mb-8 flex flex-col items-center gap-3 text-center">
-        <span className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary ring-1 ring-primary/20">
+        <span className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary ring-1 ring-primary/20 dark:border-sky-400/40 dark:bg-sky-950/40 dark:text-sky-300">
           <Heart className="size-3.5" aria-hidden="true" />
           Real stories, real service
         </span>
@@ -67,10 +67,10 @@ export default function Testimonials() {
             className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-5 shadow-sm transition-shadow hover:shadow-md sm:p-6"
           >
             <Quote
-              className="size-6 shrink-0 text-primary/70"
+              className="size-6 shrink-0 text-primary/70 dark:text-sky-300"
               aria-hidden="true"
             />
-            <blockquote className="text-sm leading-relaxed text-muted-foreground">
+            <blockquote className="text-sm leading-relaxed text-muted-foreground dark:text-slate-300">
               &ldquo;{review.quote}&rdquo;
             </blockquote>
             <figcaption className="mt-auto flex items-center gap-3 border-t border-border pt-4">
@@ -90,7 +90,7 @@ export default function Testimonials() {
                 <p className="truncate text-sm font-semibold text-foreground">
                   {review.name}
                 </p>
-                <p className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+                <p className="inline-flex items-center gap-1 text-xs text-muted-foreground dark:text-slate-300">
                   <MapPin className="size-3" aria-hidden="true" />
                   {review.location}
                 </p>

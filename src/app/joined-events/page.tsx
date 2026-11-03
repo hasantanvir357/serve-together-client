@@ -132,7 +132,7 @@ export default function JoinedEventsPage() {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-[50vh] items-center justify-center p-8 text-slate-500 dark:text-slate-400">
+      <div className="flex min-h-[50vh] items-center justify-center p-8 text-slate-500 dark:text-slate-300">
         <LoaderCircle className="w-8 h-8 animate-spin text-[#0284c7]" />
         <span className="ml-3 font-medium">Loading joined events...</span>
       </div>
@@ -144,13 +144,13 @@ export default function JoinedEventsPage() {
   return (
     <div className="container mx-auto px-4 py-8 dark:text-slate-100">
       <h1 className="text-2xl font-bold text-slate-800 dark:text-white mb-2">Joined Events</h1>
-      <p className="text-slate-500 dark:text-slate-400 mb-6">
+      <p className="text-slate-500 dark:text-slate-300 mb-6">
         View all the upcoming and past volunteering events you have signed up for.
       </p>
 
       {events.length === 0 ? (
         <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-8 text-center">
-          <p className="text-slate-600 dark:text-slate-400 mb-4">You haven&apos;t joined any volunteer events yet.</p>
+          <p className="text-slate-600 dark:text-slate-300 mb-4">You haven&apos;t joined any volunteer events yet.</p>
           <Link
             href="/upcoming-events"
             className="inline-block bg-[#0284c7] hover:bg-sky-700 text-white font-medium px-6 py-2.5 rounded-lg transition cursor-pointer"
@@ -187,11 +187,11 @@ export default function JoinedEventsPage() {
                     <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-2 line-clamp-1">
                       {event.title}
                     </h3>
-                    <div className="flex items-center text-sm text-slate-500 dark:text-slate-400 mb-1">
+                    <div className="flex items-center text-sm text-slate-500 dark:text-slate-300 mb-1">
                       <MapPin className="w-4 h-4 mr-1 text-[#0284c7] dark:text-sky-400 shrink-0" />
                       <span className="truncate">{event.location}</span>
                     </div>
-                    <div className="flex items-center text-sm text-slate-500 dark:text-slate-400 mb-4">
+                    <div className="flex items-center text-sm text-slate-500 dark:text-slate-300 mb-4">
                       <CalendarDays className="w-4 h-4 mr-1 text-[#0284c7] dark:text-sky-400 shrink-0" />
                       <span>{formattedDate}</span>
                     </div>

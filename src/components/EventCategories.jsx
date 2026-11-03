@@ -85,12 +85,12 @@ export default function EventCategories() {
           variant="status"
           icon={<HeartHandshake className="size-3.5" aria-hidden="true" />}
           label="Causes you can serve"
-          className="rounded-full"
+          className="rounded-full dark:bg-sky-950/40 dark:text-sky-300 dark:border-sky-400/40"
         />
         <h2 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
           Explore Event Categories
         </h2>
-        <p className="max-w-2xl text-sm leading-relaxed text-muted-foreground sm:text-base">
+        <p className="max-w-2xl text-sm leading-relaxed text-muted-foreground dark:text-slate-300 sm:text-base">
           Pick a cause, show up, and make a difference — every category is
           led by volunteers from the community.
         </p>
@@ -116,13 +116,13 @@ export default function EventCategories() {
               <CardHeader>
                 <EventBadge label={category.title} className="rounded-full" />
                 <CardTitle className="text-lg">{category.title}</CardTitle>
-                <CardDescription className="leading-relaxed">
+                <CardDescription className="leading-relaxed dark:text-slate-300">
                   {category.description}
                 </CardDescription>
               </CardHeader>
 
               <CardContent>
-                <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+                <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground dark:text-slate-300">
                   <EventBadge
                     variant="neutral"
                     label={

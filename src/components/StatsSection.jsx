@@ -15,7 +15,7 @@ export default function StatsSection() {
     >
       {/* Header */}
       <div className="mb-8 flex flex-col items-center gap-3 text-center">
-        <span className="inline-flex items-center gap-2 rounded-full bg-secondary/10 px-3 py-1.5 text-xs font-semibold tracking-wider text-secondary uppercase ring-1 ring-secondary/20">
+        <span className="inline-flex items-center gap-2 rounded-full border border-secondary/20 bg-secondary/10 px-3 py-1.5 text-xs font-semibold tracking-wider text-secondary uppercase ring-1 ring-secondary/20 dark:border-sky-400/40 dark:bg-sky-950/40 dark:text-sky-300">
           <Sparkles className="size-3.5" aria-hidden="true" />
           Our Impact at a Glance
         </span>
@@ -25,7 +25,7 @@ export default function StatsSection() {
             Across Bangladesh
           </span>
         </h2>
-        <p className="max-w-2xl text-sm leading-relaxed text-muted-foreground sm:text-base">
+        <p className="max-w-2xl text-sm leading-relaxed text-muted-foreground dark:text-slate-300 sm:text-base">
           Quantifying hope, support, and community action in every corner of
           the nation.
         </p>
@@ -53,7 +53,7 @@ export default function StatsSection() {
                 <p className="text-lg font-bold leading-tight text-foreground sm:text-xl">
                   {stat.value}
                 </p>
-                <p className="text-xs text-muted-foreground">{stat.label}</p>
+                <p className="text-xs text-muted-foreground dark:text-slate-300">{stat.label}</p>
               </div>
             </div>
           );

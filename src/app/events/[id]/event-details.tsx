@@ -181,7 +181,7 @@ export default function EventDetails({ eventId }: { eventId: string }) {
         <div className="flex flex-col items-center gap-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 p-10 text-center">
           <TriangleAlert className="size-8 text-red-500" aria-hidden="true" />
           <h1 className="text-lg font-semibold text-slate-800 dark:text-white">Could not load this event</h1>
-          <p className="max-w-sm text-sm text-slate-600 dark:text-slate-400">{loadError}</p>
+          <p className="max-w-sm text-sm text-slate-600 dark:text-slate-300">{loadError}</p>
         </div>
       </main>
     );
@@ -189,7 +189,7 @@ export default function EventDetails({ eventId }: { eventId: string }) {
 
   if (!event) {
     return (
-      <div className="flex min-h-[50vh] items-center justify-center p-8 text-slate-500 dark:text-slate-400">
+      <div className="flex min-h-[50vh] items-center justify-center p-8 text-slate-500 dark:text-slate-300">
         <LoaderCircle className="w-8 h-8 animate-spin text-[#0284c7]" />
         <span className="ml-3 font-medium">Loading event details...</span>
       </div>

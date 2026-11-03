@@ -50,10 +50,10 @@ export default function Footer() {
           {/* Brand */}
           <div className="lg:col-span-2 sm:col-span-2">
             <Link href="/" className="flex w-fit items-center gap-2">
-              <span className="flex size-8 items-center justify-center rounded-lg bg-primary/15 text-primary ring-1 ring-primary/30">
+              <span className="flex size-8 items-center justify-center rounded-lg bg-primary/15 text-primary ring-1 ring-primary/30 dark:bg-white/10 dark:text-white dark:ring-white/20">
                 <HandHeart className="size-5" aria-hidden="true" />
               </span>
-              <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-lg font-semibold tracking-tight text-transparent">
+              <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-lg font-semibold tracking-tight text-transparent dark:bg-none dark:text-white">
                 ServeTogether
               </span>
             </Link>

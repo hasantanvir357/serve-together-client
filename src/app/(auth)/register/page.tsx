@@ -121,7 +121,7 @@ export default function RegisterPage() {
       <Card className="w-full max-w-md shadow-md dark:border-slate-800 dark:bg-slate-900">
         <CardHeader>
           <CardTitle className="text-2xl font-bold dark:text-white">Create an account</CardTitle>
-          <CardDescription className="dark:text-slate-400">
+          <CardDescription className="dark:text-slate-300">
             Join ServeTogether to volunteer in your community.
           </CardDescription>
         </CardHeader>
@@ -270,7 +270,7 @@ export default function RegisterPage() {
           </Button>
         </CardContent>
         <CardFooter className="justify-center">
-          <p className="text-sm text-muted-foreground dark:text-slate-400">
+          <p className="text-sm text-muted-foreground dark:text-slate-300">
             Already have an account?{' '}
             <Link href="/login" className="font-medium text-[#0284c7] hover:underline">
               Login

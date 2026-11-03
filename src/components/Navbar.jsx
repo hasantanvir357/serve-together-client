@@ -73,10 +73,10 @@ function Logo({ className, onClick }) {
       onClick={onClick}
       className={cn("flex shrink-0 items-center gap-2", className)}
     >
-      <span className="flex size-8 items-center justify-center rounded-lg bg-primary/10 text-primary ring-1 ring-primary/20">
+      <span className="flex size-8 items-center justify-center rounded-lg bg-primary/10 text-primary ring-1 ring-primary/20 dark:bg-white/10 dark:text-white dark:ring-white/20">
         <HandHeart className="size-5" aria-hidden="true" />
       </span>
-      <span className="bg-linear-to-r from-primary to-secondary bg-clip-text text-lg font-semibold tracking-tight text-transparent">
+      <span className="bg-linear-to-r from-primary to-secondary bg-clip-text text-lg font-semibold tracking-tight text-transparent dark:bg-none dark:text-white">
         ServeTogether
       </span>
     </Link>

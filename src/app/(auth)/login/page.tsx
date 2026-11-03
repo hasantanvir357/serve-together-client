@@ -93,7 +93,7 @@ export default function LoginPage() {
       <Card className="w-full max-w-sm shadow-md dark:border-slate-800 dark:bg-slate-900">
         <CardHeader>
           <CardTitle className="text-2xl font-bold dark:text-white">Login</CardTitle>
-          <CardDescription className="dark:text-slate-400">
+          <CardDescription className="dark:text-slate-300">
             Sign in to create and manage your volunteering events.
           </CardDescription>
         </CardHeader>
@@ -183,7 +183,7 @@ export default function LoginPage() {
           </Button>
         </CardContent>
         <CardFooter className="justify-center">
-          <p className="text-sm text-muted-foreground dark:text-slate-400">
+          <p className="text-sm text-muted-foreground dark:text-slate-300">
             Don&apos;t have an account?{' '}
             <Link href="/register" className="font-medium text-[#0284c7] hover:underline">
               Register

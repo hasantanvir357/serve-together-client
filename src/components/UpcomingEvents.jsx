@@ -61,7 +61,7 @@ export default function UpcomingEvents() {
         <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-3xl">
           Upcoming Community Drives
         </h2>
-        <p className="max-w-2xl text-sm text-slate-500 dark:text-slate-400 sm:text-base">
+        <p className="max-w-2xl text-sm text-slate-500 dark:text-slate-300 sm:text-base">
           Reserve your spot at the next neighborhood drive — seats fill up fast.
         </p>
       </div>
@@ -102,7 +102,7 @@ export default function UpcomingEvents() {
                   <CardTitle className="text-lg font-bold text-slate-800 dark:text-white line-clamp-1">
                     {event.title}
                   </CardTitle>
-                  <CardDescription className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500 dark:text-slate-400 mt-1">
+                  <CardDescription className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500 dark:text-slate-300 mt-1">
                     <span className="inline-flex items-center gap-1.5">
                       <CalendarDays className="size-3.5 text-[#0284c7]" />
                       {formattedDate}
