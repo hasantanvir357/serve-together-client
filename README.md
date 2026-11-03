@@ -1,36 +1,35 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🤝 ServeTogether — Social Development & Volunteer Event Platform
 
-## Getting Started
+**ServeTogether** is a community-driven web application designed to empower individuals to create, discover, and join local social development and volunteer events across Bangladesh.
 
-First, run the development server:
+🔗 **Live Application URL:** [https://serve-together-client.vercel.app](https://serve-together-client.vercel.app)
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+---
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## ✨ Key Features & Highlights
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- 📅 **Event Creation & Dynamic Date Validation:** Logged-in volunteers can easily host events with strict future-date validation to prevent scheduling past events.
+- 🤝 **Seamless Event Joining:** Users can explore and join upcoming social drives (Blood Donation, Flood Relief, Tree Plantation, etc.) with real-time participant tracking.
+- 🔐 **Secure Authentication & Session Persistence:** Integrated password-based authentication and Google OAuth via BetterAuth, ensuring sessions remain active even on full browser reloads.
+- ⚙️ **Personalized Event Management & Profile Sync:** Users can easily view, update, or delete their created events on the Manage Events page and update their user profile details.
+- 🌗 **Adaptive Theme & Responsive UI:** Fully customizable Light/Dark mode toggling built with high-contrast Tailwind CSS & DaisyUI, optimized for mobile, tablet, and desktop screens.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+---
 
-## Learn More
+## 🛠️ Tech Stack & Dependencies
 
-To learn more about Next.js, take a look at the following resources:
+- **Framework:** Next.js 15 (App Router) & React 19
+- **Language:** TypeScript
+- **Styling:** Tailwind CSS & DaisyUI
+- **Authentication:** BetterAuth (Email/Password & Google OAuth)
+- **Icons & UI Enhancements:** Lucide React & React Icons
+- **Deployment:** Vercel
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+---
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 🚀 Local Development Setup
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. **Clone the repository:**
+   ```bash
+   git clone [https://github.com/hasantanvir357/serve-together.git](https://github.com/hasantanvir357/serve-together.git)
+   cd serve-together
