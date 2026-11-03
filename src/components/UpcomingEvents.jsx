@@ -5,6 +5,7 @@ import Link from "next/link";
 import { CalendarDays, MapPin, Users, ArrowRight, LoaderCircle } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import EventBadge from "@/components/EventBadge";
 import {
   Card,
   CardContent,
@@ -51,10 +52,12 @@ export default function UpcomingEvents() {
   return (
     <section className="mx-auto w-full max-w-6xl px-4 py-10 dark:text-slate-100">
       <div className="mb-8 flex flex-col items-start gap-2">
-        <span className="inline-flex items-center gap-2 rounded-full bg-sky-100 px-3 py-1.5 text-xs font-semibold text-[#0284c7] border border-sky-200 dark:bg-sky-950/60 dark:text-sky-300 dark:border-sky-800/50">
-          <CalendarDays className="size-3.5" />
-          Get involved
-        </span>
+        <EventBadge
+          variant="status"
+          icon={<CalendarDays className="size-3.5" aria-hidden="true" />}
+          label="Get involved"
+          className="rounded-full"
+        />
         <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-3xl">
           Upcoming Community Drives
         </h2>
@@ -86,13 +89,16 @@ export default function UpcomingEvents() {
                     alt={event.title}
                     className="h-full w-full object-cover transition-transform duration-300 hover:scale-105"
                   />
-                  <span className="absolute top-3 left-3 inline-flex items-center gap-1.5 rounded-full bg-[#0284c7]/90 px-2.5 py-1 text-[0.7rem] font-semibold text-white backdrop-blur">
-                    <span className="size-1.5 rounded-full bg-white" />
-                    Upcoming
-                  </span>
+                  <EventBadge
+                    variant="status"
+                    label="Upcoming"
+                    leadingDot
+                    className="absolute top-3 left-3 rounded-full bg-sky-100/95 dark:bg-sky-950/75"
+                  />
                 </div>
 
                 <CardHeader className="p-5">
+                  <EventBadge label={event.category} />
                   <CardTitle className="text-lg font-bold text-slate-800 dark:text-white line-clamp-1">
                     {event.title}
                   </CardTitle>

@@ -4,13 +4,13 @@ import * as React from 'react';
 import Link from 'next/link';
 import { CalendarDays, MapPin, Search, TriangleAlert, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { SEED_EVENTS, mergeEventsWithSeeds } from '@/lib/seed-events';
 import { useMounted } from '@/lib/use-mounted';
+import EventBadge from '@/components/EventBadge';
 
 const EVENTS_API_URL = process.env.NEXT_PUBLIC_API_URL
   ? `${process.env.NEXT_PUBLIC_API_URL}/api/events`
@@ -34,20 +34,6 @@ type EventItem = {
   imageUrl?: string;
   image?: string;
 };
-
-/** Unified Category Tag styling across Light/Dark modes. */
-function CategoryBadge({ category }: { category: string }) {
-  return (
-    <span
-      className={cn(
-        'inline-flex w-fit items-center rounded-md px-2.5 py-1 text-xs font-semibold border transition-colors',
-        'bg-sky-100 text-[#0284c7] border-sky-200 dark:bg-sky-950/60 dark:text-sky-300 dark:border-sky-800/50'
-      )}
-    >
-      {category}
-    </span>
-  );
-}
 
 /** Image with a graceful placeholder when it fails to load. */
 function EventImage({ src, title }: { src?: string; title: string }) {
@@ -268,7 +254,7 @@ export default function UpcomingEvents() {
                 >
                   <EventImage src={eventImg} title={event.title} />
                   <CardHeader className="gap-2 p-5">
-                    <CategoryBadge category={event.category} />
+                    <EventBadge label={event.category} />
                     <CardTitle className="line-clamp-1 text-xl font-bold dark:text-white">{event.title}</CardTitle>
                     <CardDescription className="line-clamp-2 text-sm dark:text-slate-400">
                       {event.description}

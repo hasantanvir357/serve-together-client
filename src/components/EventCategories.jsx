@@ -11,6 +11,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import EventBadge from "@/components/EventBadge";
 
 import treePlantation from "@/assets/events/tree-plantation.jpg";
 import winterClothes from "@/assets/events/winter-clothes.jpg";
@@ -80,10 +81,12 @@ export default function EventCategories() {
   return (
     <section className="mx-auto w-full max-w-6xl px-4 py-12 md:py-16">
       <div className="mb-8 flex flex-col items-start gap-2">
-        <span className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary ring-1 ring-primary/20">
-          <HeartHandshake className="size-3.5" aria-hidden="true" />
-          Causes you can serve
-        </span>
+        <EventBadge
+          variant="status"
+          icon={<HeartHandshake className="size-3.5" aria-hidden="true" />}
+          label="Causes you can serve"
+          className="rounded-full"
+        />
         <h2 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
           Explore Event Categories
         </h2>
@@ -94,8 +97,7 @@ export default function EventCategories() {
       </div>
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {CATEGORIES.map((category, index) => {
-          const isPrimary = index % 2 === 0;
+        {CATEGORIES.map((category) => {
           return (
             <Card
               key={category.title}
@@ -112,15 +114,7 @@ export default function EventCategories() {
               </div>
 
               <CardHeader>
-                <span
-                  className={`inline-flex w-fit items-center rounded-full px-2.5 py-1 text-[0.7rem] font-medium ${
-                    isPrimary
-                      ? "bg-primary/10 text-primary ring-1 ring-primary/20"
-                      : "bg-secondary/10 text-secondary ring-1 ring-secondary/20"
-                  }`}
-                >
-                  {category.title}
-                </span>
+                <EventBadge label={category.title} className="rounded-full" />
                 <CardTitle className="text-lg">{category.title}</CardTitle>
                 <CardDescription className="leading-relaxed">
                   {category.description}
@@ -129,14 +123,24 @@ export default function EventCategories() {
 
               <CardContent>
                 <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-                  <span className="inline-flex items-center gap-1.5 rounded-md border border-border bg-muted/50 px-2 py-1 font-medium">
-                    <CalendarDays className="size-3.5" aria-hidden="true" />
-                    {category.events} Events
-                  </span>
-                  <span className="inline-flex items-center gap-1.5 rounded-md border border-border bg-muted/50 px-2 py-1 font-medium">
-                    <Users className="size-3.5" aria-hidden="true" />
-                    {category.volunteers} Volunteers
-                  </span>
+                  <EventBadge
+                    variant="neutral"
+                    label={
+                      <>
+                        <CalendarDays className="size-3.5" aria-hidden="true" />
+                        {category.events} Events
+                      </>
+                    }
+                  />
+                  <EventBadge
+                    variant="neutral"
+                    label={
+                      <>
+                        <Users className="size-3.5" aria-hidden="true" />
+                        {category.volunteers} Volunteers
+                      </>
+                    }
+                  />
                 </div>
               </CardContent>
 

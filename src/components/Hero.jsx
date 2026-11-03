@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ArrowRight, Plus, Users } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import EventBadge from "@/components/EventBadge";
 import banner from "@/assets/banner-bg.jpg";
 
 const CATEGORIES = [
@@ -39,10 +40,12 @@ export default function Hero() {
 
         {/* Content (in-flow: keeps the banner height driven by content, capped at 520px) */}
         <div className="relative z-10 flex w-full flex-col items-start gap-4 px-5 py-8 md:w-3/4 md:py-10 lg:w-3/5">
-          <span className="inline-flex items-center gap-2 rounded-full bg-primary/90 px-3 py-1.5 text-xs font-medium text-white ring-1 ring-primary/40 backdrop-blur">
-            <Users className="size-3.5" aria-hidden="true" />
-            5,000+ Volunteers Across Bangladesh
-          </span>
+          <EventBadge
+            variant="hero"
+            icon={<Users className="size-3.5" aria-hidden="true" />}
+            label="5,000+ Volunteers Across Bangladesh"
+            className="rounded-full bg-primary/90 dark:bg-slate-950/70"
+          />
 
           <h1 className="text-3xl font-bold leading-tight tracking-tight text-white sm:text-4xl xl:text-5xl">
             Empower Rural Communities Through{" "}
@@ -58,11 +61,12 @@ export default function Hero() {
 
           <ul className="flex flex-wrap gap-2" aria-label="Charity categories">
             {CATEGORIES.map((tag) => (
-              <li
-                key={tag}
-                className="rounded-full border border-white/30 bg-white/10 px-3 py-1 text-xs font-medium text-white/90 backdrop-blur transition-colors hover:border-white/50 hover:bg-white/20 hover:text-white"
-              >
-                {tag}
+              <li key={tag}>
+                <EventBadge
+                  variant="hero"
+                  label={tag}
+                  className="rounded-full backdrop-blur transition-colors hover:border-white/50 hover:bg-white/20 hover:text-white"
+                />
               </li>
             ))}
           </ul>

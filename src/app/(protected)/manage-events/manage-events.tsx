@@ -8,6 +8,7 @@ import { useSession } from '@/lib/auth-client';
 import { useMounted } from '@/lib/use-mounted';
 import { toast } from '@/components/ui/toast';
 import { API_BASE_URL, getAuthHeaders } from '@/lib/api-client';
+import EventBadge from '@/components/EventBadge';
 
 interface EventItem {
   _id: string;
@@ -168,9 +169,7 @@ export default function ManageEvents() {
                   <tr key={event._id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition">
                     <td className="p-4 font-medium text-slate-800 dark:text-slate-100">{event.title}</td>
                     <td className="p-4">
-                      <span className="bg-sky-100 dark:bg-sky-950/60 text-[#0284c7] dark:text-sky-300 border border-sky-200 dark:border-sky-800/50 text-xs font-semibold px-2.5 py-1 rounded-md">
-                        {event.category}
-                      </span>
+                      <EventBadge label={event.category} />
                     </td>
                     <td className="p-4 text-slate-600 dark:text-slate-300">{event.location}</td>
                     <td className="p-4 text-slate-600 dark:text-slate-300">

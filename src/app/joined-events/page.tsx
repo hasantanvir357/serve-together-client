@@ -9,6 +9,7 @@ import { useSession } from '../../lib/auth-client';
 import { useMounted } from '../../lib/use-mounted';
 import { toast } from '../../components/ui/toast';
 import { API_BASE_URL, getAuthHeaders } from '../../lib/api-client';
+import EventBadge from '../../components/EventBadge';
 
 interface EventItem {
   _id: string;
@@ -182,9 +183,7 @@ export default function JoinedEventsPage() {
                     <Image src={eventImg} alt={event.title} fill unoptimized className="object-cover" />
                   </div>
                   <div className="p-5">
-                    <span className="inline-block bg-sky-100 dark:bg-sky-950/60 text-[#0284c7] dark:text-sky-300 border border-sky-200 dark:border-sky-800/50 text-xs font-semibold px-2.5 py-1 rounded-full mb-3">
-                      {event.category}
-                    </span>
+                    <EventBadge label={event.category} className="mb-3 rounded-full" />
                     <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-2 line-clamp-1">
                       {event.title}
                     </h3>

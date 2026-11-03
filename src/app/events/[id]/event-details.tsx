@@ -11,6 +11,7 @@ import { useMounted } from '../../../lib/use-mounted';
 import { findSeedEvent } from '../../../lib/seed-events';
 import { toast } from '../../../components/ui/toast';
 import { getAuthHeaders } from '../../../lib/api-client';
+import EventBadge from '../../../components/EventBadge';
 
 interface EventDoc {
   _id: string;
@@ -220,9 +221,7 @@ export default function EventDetails({ eventId }: { eventId: string }) {
           </div>
 
           <div>
-            <span className="inline-block bg-sky-100 dark:bg-sky-950/60 text-[#0284c7] dark:text-sky-300 border border-sky-200 dark:border-sky-800/50 text-xs font-semibold px-3 py-1 rounded-md mb-2">
-              {event?.category}
-            </span>
+            <EventBadge label={event?.category ?? 'Community event'} className="mb-2" />
             <h1 className="text-3xl font-bold text-slate-800 dark:text-white">{event?.title}</h1>
 
             <div className="mt-4 space-y-2 text-sm text-slate-600 dark:text-slate-300">
